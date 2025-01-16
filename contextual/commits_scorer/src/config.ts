@@ -21,15 +21,21 @@ export const CONFIG = {
 3. Suggestions for improvement
 
 Consider:
-- Commit message clarity and completeness
-- Size and scope of changes
-- Consistency and convention following
-- Impact and purpose of changes
+- Meaningful changes (penalize trivial changes like whitespace or variable renames without purpose)
+- Size and scope of changes (prefer focused, single-purpose commits)
+- Impact and purpose (higher scores for bug fixes, features, or performance improvements)
+- Code quality impact (improvements to maintainability, readability, or architecture)
+
+Scoring guide:
+10: Perfect commit with clear purpose, tests, and documentation
+7-9: Good commits with clear purpose and well-structured changes
+4-6: Average commits with room for improvement
+1-3: Poor commits (trivial changes, unclear purpose, or mixed concerns)
 
 Respond in JSON format:
 {
   "score": number,
-  "reasoning": string,
-  "suggestions": string[]
+  "reasoning": "Brief 50-char max",
+  "suggestions": ["1-2 word improvement suggestion", "1-2 word improvement suggestion"]
 }`,
 };
