@@ -18,6 +18,11 @@ interface PullRequest {
   closed_at: string;
 }
 
+interface PRScore {
+  score: number;
+  explanation: string;
+}
+
 async function getClosedPRs(): Promise<PullRequest[]> {
   const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/pulls?state=closed&sort=updated&direction=desc&per_page=2`, {
     headers: {
@@ -31,11 +36,10 @@ async function getClosedPRs(): Promise<PullRequest[]> {
   }
   
   const data = await response.json();
-  console.log(data)
   return data as PullRequest[];
 }
 
-async function scorePR(pr: PullRequest): Promise<string> {
+async function scorePR(pr: PullRequest): Promise<PRScore> {
   const prompt = `
     Analyze the following GitHub Pull Request and score it on a scale of 1-10 based on:
     1. Comprehensiveness of the feature set
@@ -46,26 +50,38 @@ async function scorePR(pr: PullRequest): Promise<string> {
     Description: ${pr.body}
 
     Provide a brief one-sentence explanation for the score.
+    
+    Return your response in the following format:
+    Score: [numerical score]
+    Explanation: [one-sentence explanation]
   `;
 
   const response = await client.chat.completions.create({
-    model: "gpt-4-turbo-preview",
+    model: "gpt-4o-mini",
     messages: [{ role: "user", content: prompt }],
     max_tokens: 150,
     temperature: 0.7,
   });
 
-  return response.choices[0].message?.content?.trim() ?? "No score provided";
+  const content = response.choices[0].message?.content?.trim() ?? "No score provided";
+  const [scoreLine, explanationLine] = content.split('\n');
+  const score = parseInt(scoreLine.split(':')[1].trim());
+  const explanation = explanationLine.split(':')[1].trim();
+
+  return { score, explanation };
 }
 
 async function main() {
   try {
     const closedPRs = await getClosedPRs();
+    const results: Record<number, PRScore> = {};
+    
     for (const pr of closedPRs) {
-      console.log(`Analyzing PR #${pr.number}: ${pr.title}`);
       const score = await scorePR(pr);
-      console.log(`Score: ${score}\n`);
+      results[pr.number] = score;
     }
+    
+    console.log(JSON.stringify(results, null, 2));
   } catch (error) {
     console.error("An error occurred:", error);
   }
