@@ -25,7 +25,7 @@ Analyze this GitHub README and evaluate its quality on a scale of 1 to 10 based 
 Provide your response in the following JSON format:
 {
   "score": number,
-  "reasoning": "detailed explanation of the score",
-  "suggestions": ["improvement suggestion 1", "improvement suggestion 2", ...]
+  "reasoning": "Brief 50-char max evaluation of key strengths/weaknesses",
+  "suggestions": ["1-2 word improvement suggestion", "1-2 word improvement suggestion"]
 }
 `;
