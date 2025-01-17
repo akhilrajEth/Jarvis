@@ -3,25 +3,68 @@ import { Commit, AnalysisOutput } from "./types";
 import { CONFIG } from "./config";
 
 function validateAnalysisOutput(data: any): AnalysisOutput {
-  if (typeof data.score !== "number" || data.score < 1 || data.score > 10) {
-    throw new Error(
-      "Invalid analysis: score must be a number between 1 and 10"
-    );
-  }
-  if (typeof data.reasoning !== "string" || !data.reasoning) {
-    throw new Error("Invalid analysis: missing or invalid reasoning");
-  }
-  if (!Array.isArray(data.suggestions)) {
-    throw new Error("Invalid analysis: suggestions must be an array");
-  }
-  if (!data.suggestions.every((s: string) => typeof s === "string")) {
-    throw new Error("Invalid analysis: all suggestions must be strings");
+  // First check if we have a commits array
+  const commits = data.commits || data.commitScores;
+  if (!Array.isArray(commits)) {
+    throw new Error("Invalid analysis: expected array of commits");
   }
 
+  // Initialize aggregated values
+  let totalScore = 0;
+  const allReasons: string[] = [];
+  const allSuggestions: string[] = [];
+
+  // Validate and collect data from each commit
+  commits.forEach((commit, index) => {
+    // Validate score
+    if (
+      typeof commit.score !== "number" ||
+      commit.score < 1 ||
+      commit.score > 10
+    ) {
+      throw new Error(
+        `Invalid analysis for commit ${index}: score must be a number between 1 and 10`
+      );
+    }
+    totalScore += commit.score;
+
+    // Validate reasoning
+    if (typeof commit.reasoning !== "string" || !commit.reasoning) {
+      throw new Error(
+        `Invalid analysis for commit ${index}: missing or invalid reasoning`
+      );
+    }
+    allReasons.push(commit.reasoning);
+
+    // Validate suggestions array
+    if (!Array.isArray(commit.suggestions)) {
+      throw new Error(
+        `Invalid analysis for commit ${index}: suggestions must be an array`
+      );
+    }
+
+    // Validate each suggestion is a string
+    if (!commit.suggestions.every((s: any) => typeof s === "string")) {
+      throw new Error(
+        `Invalid analysis for commit ${index}: all suggestions must be strings`
+      );
+    }
+    allSuggestions.push(...commit.suggestions);
+  });
+
+  // Calculate average score rounded to nearest integer
+  const averageScore = Math.round(totalScore / commits.length);
+
+  // Combine all reasons into a single string
+  const combinedReasoning = allReasons.join("; ");
+
+  // Remove duplicate suggestions while preserving order
+  const uniqueSuggestions = [...new Set(allSuggestions)];
+
   return {
-    score: data.score,
-    reasoning: data.reasoning,
-    suggestions: data.suggestions,
+    score: averageScore,
+    reasoning: combinedReasoning,
+    suggestions: uniqueSuggestions,
   };
 }
 
@@ -61,11 +104,15 @@ export async function analyzeCommits(
     });
 
     const content = response.choices[0].message.content;
+
+    console.log("CONTENT:", content);
+
     if (!content) {
       throw new Error("No response content received from OpenAI");
     }
 
     const result = JSON.parse(content);
+    console.log("RESULT:", result);
     return validateAnalysisOutput(result);
   } catch (error) {
     if (error instanceof Error) {
