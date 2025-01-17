@@ -6,12 +6,17 @@ const headers = {
   Authorization: `token ${CONFIG.GITHUB_TOKEN}`,
 };
 
-function parseRepoUrl(url: string): { owner: string; repo: string } {
-  const match = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
-  if (!match) {
-    throw new Error("Invalid GitHub repository URL");
+function parseRepoUrl(repoPath: string): { owner: string; repo: string } {
+  const parts = repoPath.split("/");
+  if (parts.length !== 2) {
+    throw new Error(
+      "Invalid repository format. Please use 'owner/repo' format"
+    );
   }
-  return { owner: match[1], repo: match[2].replace(".git", "") };
+  return {
+    owner: parts[0],
+    repo: parts[1].replace(".git", ""),
+  };
 }
 
 function validateCommit(data: any): Commit {

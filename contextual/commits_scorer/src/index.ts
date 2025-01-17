@@ -6,7 +6,7 @@ import { Commit } from "./types";
 async function main() {
   const args = process.argv.slice(2);
   if (args.length !== 1) {
-    console.error("Usage: npx ts-node src/index.ts <github-repo-url>");
+    console.error("Usage: npx ts-node src/index.ts <owner/repo>");
     process.exit(1);
   }
 
