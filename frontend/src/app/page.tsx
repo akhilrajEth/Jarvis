@@ -1,7 +1,14 @@
 import { Grid, Container, Typography } from "@mui/material";
+import { Quantico } from "next/font/google";
 import ProjectCard from "./components/projectcard";
 import { projects } from "./components/projectcard/types";
 import Header from "./components/header";
+
+const quantico = Quantico({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export default function Home() {
   return (
@@ -13,7 +20,7 @@ export default function Home() {
           component="h1"
           sx={{
             mb: 6,
-            fontFamily: "Quantico",
+            fontFamily: quantico.style.fontFamily,
             textAlign: "center",
             fontWeight: "bold",
           }}
