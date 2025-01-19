@@ -2,6 +2,7 @@
 import { Card, CardContent, Typography, Box, Chip } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { Project } from "./types";
+import GithubScoreChip from "../../components/githubscorechip";
 import {
   cardStyles,
   imageContainerStyles,
@@ -37,11 +38,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           {project.category}
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Chip
-            label={`${project.githubScore}/10 Github Score`}
-            size="small"
-            sx={chipStyles}
-          />
+          <GithubScoreChip score={project.githubScore} />
         </Box>
       </CardContent>
     </Card>

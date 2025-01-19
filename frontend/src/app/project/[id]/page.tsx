@@ -1,8 +1,31 @@
 "use client";
-import { Container, Typography, Box, Paper, Chip } from "@mui/material";
+import {
+  Container,
+  Typography,
+  Box,
+  Paper,
+  Chip,
+  SxProps,
+  Theme,
+} from "@mui/material";
+import {
+  containerStyles,
+  projectHeaderStyles,
+  projectImageStyles,
+  titleContainerStyles,
+  titleStyles,
+  categoryStyles,
+  sectionStyles,
+  sectionTitleStyles,
+  contentTextStyles,
+  subsectionTitleStyles,
+  commitBatchStyles,
+  quantitativeChipStyles,
+} from "./constants";
 import { useParams } from "next/navigation";
 import { projects } from "../../components/projectcard/types";
 import Header from "../../components/Header";
+import GithubScoreChip from "../../components/githubscorechip";
 
 export default function ProjectDetail() {
   const params = useParams();
@@ -15,83 +38,65 @@ export default function ProjectDetail() {
   return (
     <>
       <Header />
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Box sx={{ mb: 4 }}>
-          <Typography
-            variant="h4"
-            component="h1"
-            sx={{ fontFamily: "Quantico", mb: 2, fontWeight: "bold" }}
-          >
-            {project.name}
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            {project.category}
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
-            <Chip
-              label={`GitHub Score ${project.githubScore}/10`}
-              sx={{ backgroundColor: "#2196F3", color: "white" }}
-            />
+      <Container sx={containerStyles}>
+        <Box sx={projectHeaderStyles}>
+          <Box
+            component="img"
+            src={project.imagePath || "/images/project-placeholder.svg"}
+            alt={project.name}
+            sx={projectImageStyles}
+          />
+          <Box sx={titleContainerStyles}>
+            <Typography sx={titleStyles}>{project.name}</Typography>
+            <Typography sx={categoryStyles}>{project.category}</Typography>
+            <GithubScoreChip score={project.githubScore} />
           </Box>
         </Box>
 
-        <Paper
-          sx={{
-            p: 4,
-            mb: 3,
-            border: "1px solid #eaeaea",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-          }}
-        >
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" }}>
-            Project Description
-          </Typography>
-          <Typography color="text.secondary">{project.description}</Typography>
-        </Paper>
+        <Box sx={sectionStyles}>
+          <Typography sx={sectionTitleStyles}>Project Description</Typography>
+          <Typography sx={contentTextStyles}>{project.description}</Typography>
+        </Box>
 
-        <Paper
-          sx={{
-            p: 4,
-            mb: 3,
-            border: "1px solid #eaeaea",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-          }}
-        >
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: "bold" }}>
-            GitHub Analysis
-          </Typography>
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: "bold" }}>
-              Qualitative
-            </Typography>
-            <Typography color="text.secondary" sx={{ mb: 1 }}>
+        <Box sx={sectionStyles}>
+          <Typography sx={sectionTitleStyles}>Github Analysis</Typography>
+
+          <Typography sx={subsectionTitleStyles}>Qualitative</Typography>
+          <Box sx={{ mb: 2 }}>
+            <Typography sx={contentTextStyles}>
               README - {project.githubAnalysis.readme}/10:{" "}
               {project.githubAnalysis.readmeDetails}
             </Typography>
-            <Typography color="text.secondary" sx={{ mb: 1 }}>
-              Commits - {project.githubAnalysis.commits}/10:{" "}
-              {project.githubAnalysis.commitsDetails}
+
+            <Typography sx={{ ...contentTextStyles, mt: 2 }}>
+              Commits - {project.githubAnalysis.commits}/10:
             </Typography>
-            <Typography color="text.secondary">
+            {/* Batch details */}
+            <Typography sx={commitBatchStyles}>
+              Batch 1: Mostly deletions, unclear improvements
+            </Typography>
+            <Typography sx={commitBatchStyles}>
+              Batch 2: Focused commits with mixed improvements
+            </Typography>
+            <Typography sx={commitBatchStyles}>
+              Batch 3: Mix of trivial and meaningful changes
+            </Typography>
+            <Typography sx={commitBatchStyles}>
+              Batch 4: Mixed changes, unclear purposes, trivial doc updates
+            </Typography>
+
+            <Typography sx={{ ...contentTextStyles, mt: 2 }}>
               PRs - {project.githubAnalysis.prs}/10
             </Typography>
           </Box>
-          <Box>
-            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: "bold" }}>
-              Quantitative
-            </Typography>
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              {project.metrics.map((metric, index) => (
-                <Chip
-                  key={index}
-                  label={metric}
-                  variant="outlined"
-                  sx={{ border: "1px solid #eaeaea" }}
-                />
-              ))}
-            </Box>
+
+          <Typography sx={subsectionTitleStyles}>Quantitative</Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap" }}>
+            {project.metrics.map((metric, index) => (
+              <Chip key={index} label={metric} sx={quantitativeChipStyles} />
+            ))}
           </Box>
-        </Paper>
+        </Box>
       </Container>
     </>
   );
