@@ -1,9 +1,15 @@
 import { SxProps } from "@mui/material";
 
+export const mainContentStyles: SxProps<Theme> = {
+  flex: 1,
+};
+
 export const containerStyles: SxProps<Theme> = {
   py: 4,
   px: { xs: 2, sm: 3 },
   maxWidth: "1200px !important",
+  display: "flex",
+  gap: 4,
 };
 
 export const projectHeaderStyles: SxProps<Theme> = {
@@ -77,4 +83,14 @@ export const quantitativeChipStyles: SxProps<Theme> = {
   fontSize: "13px",
   mr: 1,
   mb: 1,
+};
+
+export const similarProjectsContainerStyles: SxProps<Theme> = {
+  width: 300,
+  flexShrink: 0,
+  position: "sticky",
+  top: 20,
+  alignSelf: "flex-start",
+  maxHeight: "calc(100vh - 40px)",
+  overflowY: "auto",
 };
