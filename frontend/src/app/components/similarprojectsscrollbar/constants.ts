@@ -2,7 +2,6 @@ import { SxProps } from "@mui/material";
 
 export const titleStyles: SxProps<Theme> = {
   mb: 2,
-  fontFamily: "Quantico",
   fontWeight: "bold",
 };
 

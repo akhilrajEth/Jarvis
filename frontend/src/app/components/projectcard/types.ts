@@ -35,9 +35,9 @@ export const projects: Project[] = [
   },
   {
     id: "2",
-    name: "The Hive",
+    name: "Omni AGI",
     category: "DeFi Agents",
-    githubScore: 7,
+    githubScore: 6,
     description:
       "Lorem ipsum dolor sit amet. Est doloremque suscipit non mollitia dicta est explicabo dolor! In repudiandae dolores qui praesentium debitis ut corrupti enim sed.",
     imagePath: "/images/project-placeholder.svg",
@@ -52,9 +52,9 @@ export const projects: Project[] = [
   },
   {
     id: "3",
-    name: "The Hive",
+    name: "SupplyVest",
     category: "DeFi Agents",
-    githubScore: 7,
+    githubScore: 5,
     description:
       "Lorem ipsum dolor sit amet. Est doloremque suscipit non mollitia dicta est explicabo dolor! In repudiandae dolores qui praesentium debitis ut corrupti enim sed.",
     imagePath: "/images/project-placeholder.svg",
@@ -69,9 +69,9 @@ export const projects: Project[] = [
   },
   {
     id: "4",
-    name: "The Hive",
+    name: "Solmate",
     category: "DeFi Agents",
-    githubScore: 7,
+    githubScore: 4,
     description:
       "Lorem ipsum dolor sit amet. Est doloremque suscipit non mollitia dicta est explicabo dolor! In repudiandae dolores qui praesentium debitis ut corrupti enim sed.",
     imagePath: "/images/project-placeholder.svg",
@@ -86,9 +86,9 @@ export const projects: Project[] = [
   },
   {
     id: "5",
-    name: "The Hive",
+    name: "Divinity Protocol",
     category: "DeFi Agents",
-    githubScore: 7,
+    githubScore: 3,
     description:
       "Lorem ipsum dolor sit amet. Est doloremque suscipit non mollitia dicta est explicabo dolor! In repudiandae dolores qui praesentium debitis ut corrupti enim sed.",
     imagePath: "/images/project-placeholder.svg",
@@ -103,9 +103,9 @@ export const projects: Project[] = [
   },
   {
     id: "6",
-    name: "The Hive",
+    name: "Memecoin.fun",
     category: "DeFi Agents",
-    githubScore: 7,
+    githubScore: 2,
     description:
       "Lorem ipsum dolor sit amet. Est doloremque suscipit non mollitia dicta est explicabo dolor! In repudiandae dolores qui praesentium debitis ut corrupti enim sed.",
     imagePath: "/images/project-placeholder.svg",

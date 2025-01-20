@@ -1,4 +1,4 @@
-import { AppBar, Toolbar, Typography } from "@mui/material";
+import { AppBar, Toolbar, Typography, Link } from "@mui/material";
 
 export default function Header() {
   return (
@@ -10,16 +10,21 @@ export default function Header() {
       }}
     >
       <Toolbar>
-        <Typography
-          variant="h6"
-          sx={{
-            color: "#000",
-            fontFamily: "Quantico",
-            fontWeight: "bold",
-          }}
+        <Link
+          href="http://localhost:3000"
+          underline="none"
+          sx={{ cursor: "pointer" }}
         >
-          Jarvis
-        </Typography>
+          <Typography
+            variant="h6"
+            sx={{
+              color: "#000",
+              fontWeight: "bold",
+            }}
+          >
+            Jarvis
+          </Typography>
+        </Link>
       </Toolbar>
     </AppBar>
   );
