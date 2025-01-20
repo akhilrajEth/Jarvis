@@ -10,11 +10,13 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@types/node": "^22.10.6",
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "openai": "^4.78.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7"
   }
 }

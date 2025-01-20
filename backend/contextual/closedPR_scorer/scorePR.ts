@@ -4,8 +4,8 @@ import * as dotenv from 'dotenv'
 dotenv.config()
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN 
-const owner = "blorm-network";
-const repo = "ZerePy";
+const owner = "jasonhedman";
+const repo = "the-hive";
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -24,7 +24,7 @@ interface PRScore {
 }
 
 async function getClosedPRs(): Promise<PullRequest[]> {
-  const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/pulls?state=closed&sort=updated&direction=desc&per_page=2`, {
+  const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/pulls?state=closed&sort=updated&direction=desc&per_page=10`, {
     headers: {
       Authorization: `token ${GITHUB_TOKEN}`,
       Accept: "application/vnd.github.v3+json"

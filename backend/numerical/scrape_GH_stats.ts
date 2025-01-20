@@ -9,8 +9,8 @@ const API_URL = "https://api.github.com";
 const TOKEN = process.env.GITHUB_TOKEN;
 
 // Replace with the owner and repository name
-const OWNER = "blorm-network";
-const REPO = "ZerePy";
+const OWNER = "jasonhedman";
+const REPO = "the-hive";
 
 const headers = {
     "Authorization": `token ${TOKEN}`,
