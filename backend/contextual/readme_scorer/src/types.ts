@@ -22,3 +22,16 @@ export interface RetryConfig {
   maxRetries: number;
   delay: number;
 }
+
+interface GithubAnalysis {
+  readme_score: ReadmeEvaluation | null;
+  [key: string]: any;
+}
+
+export interface Project {
+  id: number;
+  github_slug: string;
+  project_category: string;
+  project_name: string;
+  github_analysis: GithubAnalysis;
+}

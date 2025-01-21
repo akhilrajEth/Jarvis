@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@supabase/supabase-js": "^2.48.0",
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "openai": "^4.78.1",
