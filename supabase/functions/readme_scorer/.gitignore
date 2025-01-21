@@ -1,0 +1,18 @@
+# Environment variables
+.env
+
+# Deno specific
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Editor specific
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Cache directories
+.deno/
