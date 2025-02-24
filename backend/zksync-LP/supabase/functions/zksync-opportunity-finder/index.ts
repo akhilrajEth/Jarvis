@@ -13,6 +13,7 @@ import {
 } from "./types.ts";
 
 import { getKoiFinanceAPR, getPancakeSwapAPR, getSyncSwapAPR, getMaverickAPR } from "./fetch_protocol_baseApr.ts";
+import { upsertOpportunities } from "./db_utils.ts";
 
 const API_BASE_URL = "https://api.merkl.xyz/v4";
 const PROTOCOL_MAP: Record<string, string> = {
@@ -137,11 +138,13 @@ Deno.serve(async (req) => {
 
     console.log("Sorted Opportunities:");
     sortedOpportunities.forEach((opportunity) => {
-      const totalAPR = opportunity.apr + opportunity.baseApr;
-      console.log(`Base APY: ${opportunity.baseApr.toFixed(2)}%, Opportunity APY: ${opportunity.apr.toFixed(2)}%, Total APR: ${totalAPR.toFixed(2)}%, Deposit Link: ${opportunity.depositUrl}`);
+      opportunity.totalAPR = opportunity.apr + opportunity.baseApr;
     });
 
+    console.log(sortedOpportunities)
+
     //Write DB Scheme to Supabase
+    await upsertOpportunities(sortedOpportunities)
 
     return new Response(JSON.stringify(sortedOpportunities), {
       status: 200,

@@ -68,7 +68,7 @@ export interface ProtocolOpportunities {
 
 export interface EnhancedOpportunity extends Opportunity {
     baseApr: number;
-    // totalAPR: number;
+    totalAPR: number;
 }
 
 // APR Calculation Types
