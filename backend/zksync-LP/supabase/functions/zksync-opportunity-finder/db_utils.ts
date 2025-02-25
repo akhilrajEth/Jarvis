@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { EnhancedOpportunity } from './types.ts'
+import { crypto } from "https://deno.land/std/crypto/mod.ts";
 
 const supabaseUrl = Deno.env.get("LOCAL_SUPABASE_URL") || Deno.env.get("SUPABASE_URL")
 const supabaseKey = Deno.env.get("LOCAL_SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_ANON_KEY")
@@ -9,6 +10,14 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey)
+
+async function hashData(data: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const dataBuffer = encoder.encode(data);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 export async function upsertOpportunities(opportunities: EnhancedOpportunity[]) {
     console.log("Started upsert process");
@@ -29,17 +38,22 @@ export async function upsertOpportunities(opportunities: EnhancedOpportunity[]) 
             total_apr: opp.totalAPR,
             pool_address: opp.identifier
         })),
-        subscription_data: opportunities.map(opp => ({
-            opportunity_id: null,
-            subscription_data: {
+        subscription_data: await Promise.all(opportunities.map(async (opp) => {
+            const subscriptionData = {
                 protocol: opp.protocol.name,
                 poolAddress: opp.identifier,
                 token0Address: opp.tokens[0].address,
                 token1Address: opp.tokens[1].address,
                 totalAPR: `${opp.totalAPR}%`
-            },
-            zk_proof: '',
-            updated_at: new Date().toISOString(),
+            };
+            const subscriptionDataString = JSON.stringify(subscriptionData);
+            const subscriptionDataHash = await hashData(subscriptionDataString);
+            return {
+                opportunity_id: null,
+                subscription_data: subscriptionData,
+                subscription_data_hash: subscriptionDataHash,
+                updated_at: new Date().toISOString(),
+            };
         }))
     });
     console.log("Ended upsert process");
