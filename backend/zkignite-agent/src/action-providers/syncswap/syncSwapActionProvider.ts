@@ -1,9 +1,7 @@
 import { z } from "zod";
 import { Decimal } from "decimal.js";
 import { encodeFunctionData, parseEther, TransactionReceipt } from "viem";
-
 import { ethers, Interface } from "ethers";
-
 import { ActionProvider, EvmWalletProvider, Network, CreateAction } from "@coinbase/agentkit";
 import { CreatePositionSchema, GetTokenIdsSchema, RemoveLiquiditySchema } from "./schemas";
 
@@ -14,17 +12,17 @@ import { approve } from "../utils";
 import { supabase } from "../supabaseClient";
 
 /**
- * PancakeSwapActionProvider handles concentrated liquidity positions on PancakeSwap V3
+ * SyncSwapActionProvider handles concentrated liquidity positions on SyncSwap V3
  */
-export class PancakeSwapActionProvider extends ActionProvider<EvmWalletProvider> {
+export class SyncSwapActionProvider extends ActionProvider<EvmWalletProvider> {
   constructor() {
-    super("pancakeswap", []);
+    super("syncswap", []);
   }
 
   @CreateAction({
     name: "removeLiquidity",
     description: `
-Removes liquidity from a Pancakeswap V3 LP position and burns the NFT. 
+Removes liquidity from a Syncswap V3 LP position and burns the NFT. 
 
 Parameters:
 - tokenId: Numeric NFT position ID to remove liquidity from (e.g. 340250)
@@ -45,8 +43,8 @@ Important notes:
     wallet: EvmWalletProvider,
     args: z.infer<typeof RemoveLiquiditySchema>,
   ): Promise<string> {
+    console.log("Currently removing liquidity from syncswap position", args);
     try {
-      console.log("Currently removing liquidity for panacakeswap pool:", args);
       const tokenId = BigInt(args.tokenId);
       const txs: `0x${string}`[] = [];
       const MAX_UINT128 = BigInt(2) ** BigInt(128) - BigInt(1);
@@ -59,7 +57,7 @@ Important notes:
       const liquidity = position[7];
       console.log(`Position ${tokenId} liquidity: ${liquidity.toString()}`);
 
-      // Encode params for calling NFPM contract
+      // Encode params to call NFPM contract
       const encodeParams = (params: any) =>
         encodeFunctionData({
           abi: NFPM_ABI,
@@ -139,7 +137,7 @@ Important notes:
   @CreateAction({
     name: "getTokenIds",
     description: `
-Retrieves all LP position NFT token IDs owned by a specific address from PancakeSwap V3.
+Retrieves all LP position NFT token IDs owned by a specific address from SyncSwap V3.
 
 Parameters:
 - userAddress: The Ethereum address to check for owned liquidity positions (e.g. 0x1234...abcd)
@@ -154,8 +152,8 @@ Returns:
     wallet: EvmWalletProvider,
     args: z.infer<typeof GetTokenIdsSchema>,
   ): Promise<string> {
+    console.log("Currently getting active syncswap positions", args);
     try {
-      console.log("Currently getting all tokenIds for pancakeswap positions", args);
       const provider = new ethers.JsonRpcProvider("https://mainnet.era.zksync.io");
       const nfpm = new ethers.Contract(NFPM_ADDRESS, NFPM_ABI, provider);
 
@@ -163,12 +161,10 @@ Returns:
       const filter = nfpm.filters.Transfer(null, args.userAddress);
       const events = await nfpm.queryFilter(filter);
 
-      console.log("EVENTS", events);
       const tokenIds = events
         .filter((e): e is ethers.EventLog => e instanceof ethers.EventLog)
         .map(event => event.args.tokenId.toString());
 
-      console.log("TOKEN IDS", tokenIds);
       return JSON.stringify(
         {
           success: true,
@@ -186,10 +182,10 @@ Returns:
   @CreateAction({
     name: "createPosition",
     description: `
-This tool allows creating a LP position on Pancakeswap. 
+This tool allows creating a LP position on Syncswap. 
 
 It takes:
-- poolAddress: The address of the Pancakeswap LP pool to deposit to
+- poolAddress: The address of the Syncswap LP pool to deposit to
 - amount0Desired: The quantity of assets to add to the LP pool, in whole units
   Examples for ZKSync:
   - 12 ZKSync
@@ -215,7 +211,7 @@ Important notes:
         args.poolAddress,
       );
 
-      console.log("Creating a pancakeswap position with the following info", args);
+      console.log("Currently creating a syncswap position with the following args", args);
 
       console.log("Pool parameters", { token0, token1, fee, tickSpacing, currentTick });
 
@@ -238,6 +234,8 @@ Important notes:
           fee,
           tickLower,
           tickUpper,
+          tickSpacing,
+          sqrtPriceX96: 0,
           amount0Desired,
           amount1Desired,
           recipient: wallet.getAddress(),
@@ -265,6 +263,8 @@ Important notes:
     fee: number;
     tickLower: number;
     tickUpper: number;
+    tickSpacing: number;
+    sqrtPriceX96: number;
     amount0Desired: bigint;
     amount1Desired: bigint;
     recipient: string;
@@ -302,7 +302,7 @@ Important notes:
   }
 
   private async addActivePosition(positionId: string, poolAddress: string): Promise<string> {
-    console.log("Currently adding active position for pancakeswap pool:", positionId, poolAddress);
+    console.log("Adding active position to db for syncswap position", positionId, poolAddress);
     try {
       const { data, error } = await supabase
         .from("agent_subscription_data")
@@ -376,10 +376,10 @@ Important notes:
       {
         success: true,
         txHash,
-        blockNumber: receipt.blockNumber.toString(), // Convert to string
+        blockNumber: receipt.blockNumber.toString(),
         positionNFT: {
           contract: receipt.to,
-          tokenId: receipt.logs?.[0]?.topics?.[2]?.toString(), // Convert to string
+          tokenId: receipt.logs?.[0]?.topics?.[2]?.toString(),
         },
       },
       null,
@@ -392,7 +392,7 @@ Important notes:
     return JSON.stringify(
       {
         success: false,
-        error: errorMessage.replace(/\[(BigInt:\d+)\]/g, '"$1"'), // Sanitize BigInt in errors
+        error: errorMessage.replace(/\[(BigInt:\d+)\]/g, '"$1"'),
       },
       null,
       2,
@@ -424,4 +424,4 @@ Important notes:
   supportsNetwork = (network: Network) => true;
 }
 
-export const pancakeSwapActionProvider = () => new PancakeSwapActionProvider();
+export const syncSwapActionProvider = () => new SyncSwapActionProvider();
