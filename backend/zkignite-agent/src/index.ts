@@ -17,6 +17,8 @@ import { erc20ActionProvider } from "./action-providers/erc20/erc20ActionProvide
 import { wethActionProvider } from "./action-providers/weth/wethActionProvider";
 import { opportunitiesActionProvider } from "./action-providers/opportunityDatabase/opportunityDatabaseActionProvider";
 import { weiToEthConverterActionProvider } from "./action-providers/weiToEthConverter/weiToEthConverterActionProvider";
+import { pancakeSwapActionProvider } from "./action-providers/pancakeswap/pancakeSwapActionProvider";
+import { syncSwapActionProvider } from "./action-providers/syncswap/syncSwapActionProvider";
 import { getLangChainTools } from "@coinbase/agentkit-langchain";
 import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
@@ -89,6 +91,8 @@ async function initializeAgent() {
         wethActionProvider(),
         walletActionProvider(),
         weiToEthConverterActionProvider(),
+        pancakeSwapActionProvider(),
+        syncSwapActionProvider(),
         cdpApiActionProvider({
           apiKeyName: process.env.CDP_API_KEY_NAME,
           apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
