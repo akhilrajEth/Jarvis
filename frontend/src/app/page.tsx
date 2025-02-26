@@ -3,6 +3,8 @@
 import React from "react";
 import { Box, Typography, Button } from "@mui/material";
 import { styled } from "@mui/system";
+import { GlowOrb } from "../components/orb";
+
 import Link from "next/link";
 
 export default function Home() {
@@ -18,12 +20,14 @@ export default function Home() {
         padding: 2,
       }}
     >
+      <GlowOrb size={150} color="rgba(100, 200, 255, 0.3)" top="15%" />
+
       {/* Main Heading */}
       <Typography
         variant="h2"
         component="h1"
         gutterBottom
-        sx={{ fontWeight: 500 }}
+        sx={{ fontWeight: 500, pt: 8 }}
       >
         Hey, I’m Jarvis{" "}
         <span role="img" aria-label="waving hand">

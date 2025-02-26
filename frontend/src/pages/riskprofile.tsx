@@ -1,73 +1,121 @@
 "use client";
 
 import React, { useState } from "react";
-import { Box, Typography, Button } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Paper,
+  CircularProgress,
+  Alert,
+  Chip,
+  Stack,
+  Divider,
+} from "@mui/material";
 import QRCode from "react-qr-code";
 import { ReclaimProofRequest } from "@reclaimprotocol/js-sdk/dist/index.js";
 
 export default function RiskProfile() {
   const [requestUrl, setRequestUrl] = useState<string>("");
   const [proofs, setProofs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>("");
+  const [allocation, setAllocation] = useState<{
+    score: string;
+    lp: number;
+    restakedETH: number;
+  } | null>(null);
 
   const getVerificationReq = async () => {
     try {
-      const APP_ID = "0x531eB1A7683cE3179F83F812AaBf85a6f3602Ba0";
-      const APP_SECRET =
-        "0xa4ec041522c8851a8c94e55c6b1019fae3b3ded42663434a01570b2d26c77d89";
-      const PROVIDER_ID = "3106a118-26e7-4f02-b718-06e11f5b8954";
+      setLoading(true);
+      setError("");
+      setRequestUrl("");
+      setProofs([]);
+      setAllocation(null);
 
-      // Initialize Reclaim Proof Request
+      // 2. Initialize Reclaim protocol
+      const APP_ID = process.env.NEXT_PUBLIC_RECLAIM_APP_ID;
+      const APP_SECRET = process.env.NEXT_PUBLIC_RECLAIM_APP_SECRET;
+      const PROVIDER_ID = process.env.NEXT_PUBLIC_RECLAIM_PROVIDER_ID;
+
       const reclaimProofRequest = await ReclaimProofRequest.init(
         APP_ID,
         APP_SECRET,
         PROVIDER_ID
       );
 
-      // Get the request URL for verification
+      // Get QR code URL
       const requestUrl = await reclaimProofRequest.getRequestUrl();
-      console.log("Request URL:", requestUrl);
       setRequestUrl(requestUrl);
 
-      // Start listening for proof submissions
+      // Start verification session
       await reclaimProofRequest.startSession({
         onSuccess: (proofs) => {
-          console.log("Verification success", proofs);
-          setProofs(proofs);
-
-          // Extract credit score and calculate asset allocation
-          let proofData = JSON.parse(proofs.claimData.context);
-          let creditScore = parseInt(proofData.extractedParameters.text);
-
-          const riskRanges = {
-            "300-578": { score: "Poor", lp: 20, restakedETH: 80 },
-            "579-668": { score: "Fair", lp: 35, restakedETH: 65 },
-            "669-738": { score: "Good", lp: 50, restakedETH: 50 },
-            "739-798": { score: "Very good", lp: 65, restakedETH: 35 },
-            "799-850": { score: "Excellent", lp: 80, restakedETH: 20 },
-          };
-
-          function getAssetAllocation(creditScore: number) {
-            for (const [range, data] of Object.entries(riskRanges)) {
-              const [min, max] = range.split("-").map(Number);
-              if (creditScore >= min && creditScore <= max) {
-                return data;
-              }
-            }
-            return { score: "Invalid score", lp: null, restakedETH: null };
+          // Validate session in response
+          if (
+            !proofs.sessionId ||
+            proofs.sessionId !== reclaimProofRequest.sessionId
+          ) {
+            setError("Session ID mismatch detected");
+            return;
           }
 
-          let assetAllocation = getAssetAllocation(creditScore);
+          // Process successful verification
+          setProofs(proofs);
 
-          console.log(
-            `Based on your credit score (${assetAllocation.score}), we recommend an asset split of ${assetAllocation.lp}% liquidity pool positions and ${assetAllocation.restakedETH}% restaked ETH.`
-          );
+          try {
+            const proofData = JSON.parse(proofs.claimData.context);
+            const creditScore = parseInt(proofData.extractedParameters.text);
+
+            const riskRanges = {
+              "300-578": { score: "Poor", lp: 20, restakedETH: 80 },
+              "579-668": { score: "Fair", lp: 35, restakedETH: 65 },
+              "669-738": { score: "Good", lp: 50, restakedETH: 50 },
+              "739-798": { score: "Very good", lp: 65, restakedETH: 35 },
+              "799-850": { score: "Excellent", lp: 80, restakedETH: 20 },
+            };
+
+            const allocation = Object.entries(riskRanges).find(([range]) => {
+              const [min, max] = range.split("-").map(Number);
+              return creditScore >= min && creditScore <= max;
+            })?.[1] || { score: "Invalid score", lp: 0, restakedETH: 0 };
+
+            setAllocation(allocation);
+          } catch (parseError) {
+            setError("Failed to parse verification results");
+            console.error("Data Parsing Error:", parseError);
+          }
         },
         onError: (error) => {
-          console.error("Verification failed", error);
+          console.error("Session Error Details:", {
+            error: error instanceof Error ? error.message : "Unknown error",
+            sessionId: reclaimProofRequest.sessionId,
+            statusUrl,
+            timestamp: new Date().toISOString(),
+          });
+
+          setError(
+            `Verification failed: ${
+              error instanceof Error ? error.message : "Unknown error"
+            }`
+          );
+          localStorage.removeItem("reclaimSession");
         },
       });
     } catch (error) {
-      console.error("Error initializing verification request:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to start verification process";
+
+      setError(errorMessage);
+      console.error("Verification Process Error:", {
+        error,
+        timestamp: new Date().toISOString(),
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -77,62 +125,141 @@ export default function RiskProfile() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        textAlign: "center",
-        padding: 2,
+        minHeight: "100vh",
+        py: 8,
+        px: 2,
+        bgcolor: "background.paper",
       }}
     >
-      {/* Main Heading */}
+      {/* Header Section */}
       <Typography
         variant="h4"
-        component="h4"
+        component="h1"
         gutterBottom
-        sx={{ fontWeight: 400 }}
+        sx={{
+          fontWeight: 500,
+          mb: 4,
+          color: "text.primary",
+        }}
       >
-        Let's understand your risk profile ...
+        Let's understand your risk profile
       </Typography>
 
-      {/* Button to Generate Verification Request */}
-      <Button
-        variant="contained"
-        size="large"
+      <Paper
+        elevation={3}
         sx={{
-          backgroundColor: "#000",
-          color: "#fff",
-          textTransform: "none",
-          marginTop: 2,
-          marginBottom: 2,
+          p: 4,
+          width: "100%",
+          maxWidth: 600,
+          borderRadius: 4,
+          textAlign: "center",
         }}
-        onClick={getVerificationReq}
       >
-        Get Verification Request
-      </Button>
+        {/* Verification Section */}
+        {!proofs.length && (
+          <Stack spacing={3} alignItems="center">
+            <Typography variant="h6">
+              Verify your credit score to get personalized allocations
+            </Typography>
 
-      {/* Display QR Code when request URL is available */}
-      {requestUrl && (
-        <Box sx={{ marginTop: 2 }}>
-          <QRCode value={requestUrl} />
-        </Box>
-      )}
+            <Typography variant="body1" color="text.secondary">
+              We are using ZKTLS to verify your credit score. This will help us
+              recommend the best allocation for you without damaging your credit
+              score.
+            </Typography>
 
-      {/* Display Proofs when verification is successful */}
-      {proofs.length > 0 && (
-        <Box sx={{ marginTop: 4 }}>
-          <Typography variant="h6" component="h6" gutterBottom>
-            Verification Successful!
-          </Typography>
-          <pre
-            style={{
-              textAlign: "left",
-              backgroundColor: "#f4f4f4",
-              padding: "10px",
-            }}
-          >
-            {JSON.stringify(proofs, null, 2)}
-          </pre>
-        </Box>
-      )}
+            <Button
+              variant="contained"
+              size="large"
+              disabled={loading}
+              onClick={getVerificationReq}
+              sx={{
+                backgroundColor: "#000",
+                color: "#fff",
+                textTransform: "none",
+                paddingX: 4,
+                borderRadius: "24px",
+              }}
+            >
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                "Start Verification"
+              )}
+            </Button>
+
+            {error && (
+              <Alert severity="error" sx={{ width: "100%" }}>
+                {error}
+              </Alert>
+            )}
+
+            {requestUrl && (
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                }}
+              >
+                <Typography variant="subtitle2" gutterBottom>
+                  Scan QR Code
+                </Typography>
+                <QRCode
+                  value={requestUrl}
+                  size={196}
+                  style={{ padding: 8, backgroundColor: "#fff" }}
+                />
+              </Paper>
+            )}
+          </Stack>
+        )}
+
+        {/* Results Section */}
+        {proofs.length > 0 && allocation && (
+          <Stack spacing={3}>
+            <Alert severity="success" sx={{ mb: 2 }}>
+              Verification Successful!
+            </Alert>
+
+            <Divider />
+
+            <Typography variant="h6" component="div">
+              Recommended Allocation
+            </Typography>
+
+            <Stack direction="row" spacing={2} justifyContent="center">
+              <Chip
+                label={`Credit Score: ${allocation.score}`}
+                color="primary"
+                variant="outlined"
+              />
+            </Stack>
+
+            <Stack direction="row" spacing={4} justifyContent="center">
+              <Box textAlign="center">
+                <Typography variant="h5" color="primary">
+                  {allocation.lp}%
+                </Typography>
+                <Typography variant="body2">Liquidity Pools</Typography>
+              </Box>
+
+              <Box textAlign="center">
+                <Typography variant="h5" color="primary">
+                  {allocation.restakedETH}%
+                </Typography>
+                <Typography variant="body2">Restaked ETH</Typography>
+              </Box>
+            </Stack>
+
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              Based on your credit score assessment
+            </Typography>
+          </Stack>
+        )}
+      </Paper>
     </Box>
   );
 }
