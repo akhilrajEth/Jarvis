@@ -14,10 +14,12 @@
     "@mui/icons-material": "^6.4.6",
     "@mui/material": "^6.4.6",
     "@reclaimprotocol/js-sdk": "^2.2.1",
+    "@supabase/supabase-js": "^2.49.1",
     "next": "^15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-qr-code": "^2.0.15"
+    "react-qr-code": "^2.0.15",
+    "supabase": "^2.15.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
