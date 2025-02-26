@@ -66,6 +66,12 @@ async function initializeAgent() {
       model: "gpt-4o-mini",
     });
 
+    // const llm = new ChatOpenAI({
+    //   model: "llama",
+    //   api_key: process.env.GAIA_API_KEY,
+    //   base_url: "https://llamatool.us.gaianet.network/v1",
+    // });
+
     const account = privateKeyToAccount((process.env.PRIVATE_KEY || "0x1234") as `0x${string}`);
 
     const client = createWalletClient({
