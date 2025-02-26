@@ -50,7 +50,7 @@ export default function Home() {
       </Typography>
 
       {/* Get Started Button */}
-      <Link href="/riskprofile" passHref>
+      <Link href="/details" passHref>
         <Button
           variant="contained"
           size="large"
