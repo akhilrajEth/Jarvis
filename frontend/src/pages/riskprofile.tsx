@@ -17,7 +17,7 @@ import { ReclaimProofRequest } from "@reclaimprotocol/js-sdk/dist/index.js";
 
 export default function RiskProfile() {
   const [requestUrl, setRequestUrl] = useState<string>("");
-  const [proofs, setProofs] = useState<any[]>([]);
+  const [proofs, setProofs] = useState<any>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [allocation, setAllocation] = useState<{
@@ -52,16 +52,8 @@ export default function RiskProfile() {
       // Start verification session
       await reclaimProofRequest.startSession({
         onSuccess: (proofs) => {
-          // Validate session in response
-          if (
-            !proofs.sessionId ||
-            proofs.sessionId !== reclaimProofRequest.sessionId
-          ) {
-            setError("Session ID mismatch detected");
-            return;
-          }
-
           // Process successful verification
+          console.log("Verification success", proofs);
           setProofs(proofs);
 
           try {
@@ -82,6 +74,8 @@ export default function RiskProfile() {
             })?.[1] || { score: "Invalid score", lp: 0, restakedETH: 0 };
 
             setAllocation(allocation);
+            console.log()
+            //Page success stuff
           } catch (parseError) {
             setError("Failed to parse verification results");
             console.error("Data Parsing Error:", parseError);
@@ -218,7 +212,7 @@ export default function RiskProfile() {
         )}
 
         {/* Results Section */}
-        {proofs.length > 0 && allocation && (
+        {allocation && (
           <Stack spacing={3}>
             <Alert severity="success" sx={{ mb: 2 }}>
               Verification Successful!
