@@ -33,7 +33,7 @@ export default function Home() {
 
       {/* Subheading */}
       <Typography variant="h5" component="p" gutterBottom>
-        I can automatically optimize your DeFi yield.
+        I can optimize your DeFi yield for you.
       </Typography>
 
       {/* Secondary Text */}
