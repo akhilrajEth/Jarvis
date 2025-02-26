@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import QRCode from 'react-qr-code';
-import { ReclaimProofRequest } from '../$node_modules/@reclaimprotocol/js-sdk/dist/index.js';
+import { ReclaimProofRequest } from '@reclaimprotocol/js-sdk/dist/index.js';
  
 function VerifyShareCredit() {
 
@@ -33,12 +33,28 @@ function VerifyShareCredit() {
         let proofData = JSON.parse(proofs.claimData.context)
         let creditScore = proofData.extractedParameters.text
 
-        if (creditScore > 650){
-          console.log("Good Credit")
+        const riskRanges = {
+          '300-578': { score: "Poor", lp: 20, restakedETH: 80 },
+          '579-668': { score: "Fair", lp: 35, restakedETH: 65 },
+          '669-738': { score: "Good", lp: 50, restakedETH: 50 },
+          '739-798': { score: "Very good", lp: 65, restakedETH: 35 },
+          '799-850': { score: "Excellent", lp: 80, restakedETH: 20 }
+        };
+      
+        function getlpllocation(creditScore) {
+            for (const [range, data] of Object.entries(riskRanges)) {
+                const [min, max] = range.split('-').map(Number);
+                if (creditScore >= min && creditScore <= max) {
+                    return data;
+                }
+            }
+            return { score: "Invalid score", lp: null, restakedETH: null };
         }
-        else{
-          console.log("Bad Credit")
-        }
+        
+        let assetAllocation = getlpllocation(creditScore)
+
+        console.log(`Based on your credit score, rating ${assetAllocation.score}. We recommend a asset split of ${assetAllocation.lp} liquidity pool positions & ${assetAllocation.restakedETH} restaked ETH`)
+
         // Add your success logic here, such as:
         // - Updating UI to show verification success
         // - Storing verification status
