@@ -4,8 +4,6 @@ import { StakeSchema } from "./schemas";
 import { v4 as uuidv4 } from "uuid";
 import axios, { AxiosResponse } from "axios";
 
-import { PodResponse, RestakeRequestResult, RestakeStatusResult, DepositTxResponse } from "./types";
-
 import { signAndBroadcast } from "../utils";
 
 export class StakeActionProvider extends ActionProvider {
@@ -87,10 +85,10 @@ export class StakeActionProvider extends ActionProvider {
     };
   }
 
-  private async createEigenPod(): Promise<PodResponse> {
+  private async createEigenPod(): Promise<any> {
     const url = `${this.apiBaseUrl}eth/staking/eigenlayer/tx/create-pod`;
     try {
-      const response: AxiosResponse<{ result: PodResponse }> = await axios.post(
+      const response: AxiosResponse<{ result: any }> = await axios.post(
         url,
         {},
         { headers: this.getAuthorizationHeaders() },
@@ -108,7 +106,7 @@ export class StakeActionProvider extends ActionProvider {
 
   private async createRestakeRequest(stakerAddress: string): Promise<{
     uuid: string;
-    result: RestakeRequestResult;
+    result: any;
   }> {
     const uuid = uuidv4();
     const url = `${this.apiBaseUrl}eth/staking/direct/nodes-request/create`;
@@ -123,11 +121,9 @@ export class StakeActionProvider extends ActionProvider {
     };
 
     try {
-      const response: AxiosResponse<{ result: RestakeRequestResult }> = await axios.post(
-        url,
-        data,
-        { headers: this.getAuthorizationHeaders() },
-      );
+      const response: AxiosResponse<{ result: any }> = await axios.post(url, data, {
+        headers: this.getAuthorizationHeaders(),
+      });
       console.log("Restake Request Response:", response.data);
       return { uuid, result: response.data.result };
     } catch (error) {
@@ -143,12 +139,12 @@ export class StakeActionProvider extends ActionProvider {
     uuid: string,
     retries: number = 3,
     delay: number = 3000,
-  ): Promise<RestakeStatusResult> {
+  ): Promise<any> {
     const url = `${this.apiBaseUrl}eth/staking/direct/nodes-request/status/${uuid}`;
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        const response: AxiosResponse<{ result: RestakeStatusResult }> = await axios.get(url, {
+        const response: AxiosResponse<{ result: any }> = await axios.get(url, {
           headers: this.getAuthorizationHeaders(),
         });
 
@@ -169,7 +165,7 @@ export class StakeActionProvider extends ActionProvider {
     throw new Error("Restake status is still 'processing' after maximum retries");
   }
 
-  private async createDepositTx(result: RestakeStatusResult): Promise<DepositTxResponse> {
+  private async createDepositTx(result: any): Promise<any> {
     const url = `${this.apiBaseUrl}eth/staking/direct/tx/deposit`;
     const depositData = result.depositData[0];
     const data = {
@@ -184,7 +180,7 @@ export class StakeActionProvider extends ActionProvider {
     };
 
     try {
-      const response: AxiosResponse<{ result: DepositTxResponse }> = await axios.post(url, data, {
+      const response: AxiosResponse<{ result: any }> = await axios.post(url, data, {
         headers: this.getAuthorizationHeaders(),
       });
       console.log("Deposit Transaction Response:", response.data);
