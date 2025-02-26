@@ -3,12 +3,20 @@ Your AI agent that optimizes yield by autonomously managing Liquidity Pool posit
 
 # How's it work?
 1. Verifiable Risk Profile: we securely verify your CreditKarma credit score via ZkTLS
-2. Provide a spending limit/deposit for agent
-3. Review your yield strategy split determined by your Verifiable Risk Profile, and set the agent off!
-4. Agent will autonomously manage LP positions across ZKSync boosted LP Pools & restaking. Rebalancing when necessary
+2. Review your yield strategy split determined by your Verifiable Risk Profile, and set it off!
+3. Jarvis will autonomously manage LP positions across ZKSync boosted LP Pools & restaked ETH. Rebalancing when necessary.
 
+Sit back, relax, get yield.
+
+# System Architecture
+Verified Inference w/ Gaia, hashing for data integrity, ZkTLS for secure/verified data sharing, P2P to manage restaked ETH flows
+
+# Verifiable Risk Profile
 impermanent loss & ease to liquidate
+higher credit scores can afford to take on more risk,
 
-Autonomous polling period
 
-higher credit scores can afford to take on more risk
+# FIP
+- Hosting Gaia Node on AWS, finetune
+- Integrating account management w/ Privy Server wallets
+    - Spending limits, account based systems etc.
