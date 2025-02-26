@@ -3,7 +3,7 @@ import { z } from "zod";
 import { StakeSchema } from "./schemas";
 import { v4 as uuidv4 } from "uuid";
 import axios, { AxiosResponse } from "axios";
-
+import { supabase } from "../supabaseClient";
 import { signAndBroadcast } from "../utils";
 
 export class StakeActionProvider extends ActionProvider {
@@ -66,6 +66,8 @@ export class StakeActionProvider extends ActionProvider {
       });
 
       console.log(signedDepositTx);
+      this.addEthRestaked(depositTxResponse.value);
+
       console.log(
         `\n🔍 View your validator on BeaconChain: https://holesky.beaconcha.in/validator/${pubkey}`,
       );
@@ -193,6 +195,20 @@ export class StakeActionProvider extends ActionProvider {
       );
       throw error;
     }
+  }
+
+  private async addEthRestaked(depositAmount: string) {
+    const { data, error } = await supabase
+      .from("eth_restaked")
+      .insert([
+        {
+          deposit_amount: depositAmount,
+        },
+      ])
+      .select();
+
+    if (error) throw new Error(`Insert failed: ${error.message}`);
+    return data;
   }
 
   supportsNetwork = (network: Network) => true;
