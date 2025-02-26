@@ -63,14 +63,9 @@ async function initializeAgent() {
   try {
     // Initialize LLM
     const llm = new ChatOpenAI({
-      model: "gpt-4o-mini",
+      api_key: process.env.GAIA_API_KEY,
+      base_url: "https://llama70b.gaia.domains/v1",
     });
-
-    // const llm = new ChatOpenAI({
-    //   model: "llama",
-    //   api_key: process.env.GAIA_API_KEY,
-    //   base_url: "https://llamatool.us.gaianet.network/v1",
-    // });
 
     const account = privateKeyToAccount((process.env.PRIVATE_KEY || "0x1234") as `0x${string}`);
 
