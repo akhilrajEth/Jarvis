@@ -22,11 +22,12 @@ import { ChatOpenAI } from "@langchain/openai";
 import * as fs from "fs";
 import * as readline from "readline";
 import * as dotenv from "dotenv";
-import express ,{ Request, Response } from 'express';
+import express, { Request, Response } from "express";
+import cors from "cors";
 
 dotenv.config();
-const app = express()
-const port = 3000;
+const app = express();
+const port = 3001;
 
 /**
  * Validates that required environment variables are set
@@ -256,7 +257,7 @@ async function main() {
     // } else {
     //   await runAutonomousMode(agent, config);
     // }
-    await runAutonomousMode(agent, config)
+    await runAutonomousMode(agent, config);
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error:", error.message);
@@ -265,18 +266,28 @@ async function main() {
   }
 }
 
-app.get('/run-agent', async (req: Request, res: Response) => {
-    try {
-      console.log("Starting Agent...");
-      await main();
-      res.send('Agent started successfully');
-    } catch (error) {
-      console.error("Fatal error:", error);
-      res.status(500).send('Error starting agent');
-    }
-  });
-  
-  app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-  });
+const corsOptions = {
+  origin: "http://localhost:3000",
+  methods: ["GET", "POST"],
+  credentials: true,
+};
 
+app.use(cors(corsOptions));
+
+app.options("/run-agent", cors(corsOptions));
+
+app.get("/run-agent", async (req: Request, res: Response) => {
+  try {
+    console.log("Starting Agent...");
+    res.setHeader("Content-Type", "text/plain");
+    res.send("Agent started successfully");
+    await main();
+  } catch (error) {
+    console.error("Fatal error:", error);
+    res.status(500).send("Error starting agent");
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
