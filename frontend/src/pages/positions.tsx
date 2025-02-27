@@ -296,10 +296,10 @@ const Positions = () => {
                       </Box>
                     </TableCell>
                     <TableCell sx={{ paddingY: 2 }}>
-                      {formatTokenAmount(position.token0Amount)}
+                      {position.token0Amount}
                     </TableCell>
                     <TableCell sx={{ paddingY: 2 }}>
-                      {formatTokenAmount(position.token1Amount)}
+                      {position.token1Amount}
                     </TableCell>
                   </TableRow>
                 ))}
