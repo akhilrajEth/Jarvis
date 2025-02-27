@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * Input schema for getting the current LP SyncSwap and PancakeSwap opportunities from the Supabase database, along with their token addresses, pool addresses, and total APRs.
+ * Input schema for getting the current eth allocation towards SyncSwap and PancakeSwap opportunities.
  */
 export const FetchAllocationSchema = z
   .object({})
