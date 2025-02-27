@@ -30,7 +30,10 @@ export async function signAndBroadcast(
 ): Promise<string> {
   console.log("Started signing and broadcasting transaction");
   try {
-    const rpcURL = "https://ethereum-holesky-rpc.publicnode.com";
+    // const rpcURL = "https://ethereum-holesky-rpc.publicnode.com";
+
+    const rpcURL = "https://1rpc.io/holesky";
+
     const provider: JsonRpcProvider = new ethers.JsonRpcProvider(rpcURL);
 
     console.log("PARAMS:", params);

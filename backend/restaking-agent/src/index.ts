@@ -72,7 +72,7 @@ async function initializeAgent() {
     const client = createWalletClient({
       account,
       chain: holesky,
-      transport: http(),
+      transport: http("https://holesky.drpc.org"),
     });
 
     const walletProvider = new ViemWalletProvider(client);

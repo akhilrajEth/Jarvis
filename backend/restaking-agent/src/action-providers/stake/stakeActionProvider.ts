@@ -7,6 +7,7 @@ import { supabase } from "../supabaseClient";
 import { signAndBroadcast } from "../utils";
 
 export class StakeActionProvider extends ActionProvider {
+  public pubkey = "";
   constructor() {
     super("stake", []);
   }
@@ -22,25 +23,25 @@ export class StakeActionProvider extends ActionProvider {
   async executeStaking(wallet: EvmWalletProvider) {
     try {
       // Step 1: Create EigenPod
-      console.log("Step 1: Creating EigenPod...");
-      const podResponse = await this.createEigenPod();
-      console.log("Pod Created:", podResponse.serializeTx);
+      // console.log("Step 1: Creating EigenPod...");
+      // const podResponse = await this.createEigenPod();
+      // console.log("Pod Created:", podResponse.serializeTx);
 
       // Sign and Broadcast EigenPod Transaction
-      console.log("Signing and broadcasting EigenPod transaction...");
-      const signedPodTx = await signAndBroadcast(wallet, {
-        txHex: podResponse.serializeTx,
-        gasLimit: podResponse.gasLimit,
-        maxFeeGas: podResponse.maxFeePerGas,
-        maxPriorityFeeGas: podResponse.maxPriorityFeePerGas,
-        amount: podResponse.value,
-      });
+      // console.log("Signing and broadcasting EigenPod transaction...");
+      // const signedPodTx = await signAndBroadcast(wallet, {
+      //   txHex: podResponse.serializeTx,
+      //   gasLimit: podResponse.gasLimit,
+      //   maxFeeGas: podResponse.maxFeePerGas,
+      //   maxPriorityFeeGas: podResponse.maxPriorityFeePerGas,
+      //   amount: podResponse.value,
+      // });
 
-      console.log(signedPodTx);
+      // console.log(signedPodTx);
 
       // Step 2: Create Restake Request
       console.log("Step 2: Creating Restake Request...");
-      const { uuid, result: restakeRequest } = await this.createRestakeRequest(wallet.address);
+      const { uuid, result: restakeRequest } = await this.createRestakeRequest(wallet.getAddress());
 
       // Step 3: Check Restake Status with retry
       console.log("Step 3: Checking Restake Status...");
@@ -52,7 +53,7 @@ export class StakeActionProvider extends ActionProvider {
 
       // Step 5: Wait for transaction finality
       console.log("Step 5: Wait 30 seconds for the first transaction to complete...");
-      await wait(30000);
+      await this.wait(15000);
 
       // Step 6: Execute Deposit
       console.log("Step 6: Signing & Broadcasting Deposit Transaction...");
@@ -69,7 +70,7 @@ export class StakeActionProvider extends ActionProvider {
       this.addEthRestaked(depositTxResponse.value);
 
       console.log(
-        `\n🔍 View your validator on BeaconChain: https://holesky.beaconcha.in/validator/${pubkey}`,
+        `\n🔍 View your validator on BeaconChain: https://holesky.beaconcha.in/validator/${this.pubkey}`,
       );
     } catch (error) {
       console.error(
@@ -186,7 +187,7 @@ export class StakeActionProvider extends ActionProvider {
         headers: this.getAuthorizationHeaders(),
       });
       console.log("Deposit Transaction Response:", response.data);
-      pubkey = depositData.pubkey;
+      this.pubkey = depositData.pubkey;
       return response.data.result;
     } catch (error) {
       console.error(
@@ -209,6 +210,10 @@ export class StakeActionProvider extends ActionProvider {
 
     if (error) throw new Error(`Insert failed: ${error.message}`);
     return data;
+  }
+
+  private wait(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   supportsNetwork = (network: Network) => true;
