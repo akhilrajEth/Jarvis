@@ -76,8 +76,25 @@ const Positions = () => {
             .map(async (position) => {
               let updatedPosition: PositionWithTokens = { ...position };
 
-              // Only process SyncSwap positions with valid ID
-              if (position.name?.toLowerCase().includes("syncswap")) {
+              // Only process PancakeSwap positions with valid ID
+              if (position.name?.toLowerCase().includes("pancakeswap")) {
+                try {
+                  const pancakeData = await getPositionDetails(
+                    position.active_position_id.trim(), // Ensure clean string
+                    "pancake"
+                  );
+                  updatedPosition = {
+                    ...updatedPosition,
+                    token0Amount: pancakeData.token0Amount,
+                    token1Amount: pancakeData.token1Amount,
+                  };
+                } catch (error) {
+                  console.error(
+                    `Failed to fetch details for position ${position.active_position_id}:`,
+                    error
+                  );
+                }
+              } else if (position.name?.toLowerCase().includes("syncswap")) {
                 try {
                   const swapData = await getPositionDetails(
                     position.active_position_id.trim(), // Ensure clean string

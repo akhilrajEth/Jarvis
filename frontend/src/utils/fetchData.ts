@@ -81,6 +81,8 @@ export async function getPositionDetails(
   tokenId: string,
   chain: "pancake" | "sync"
 ): Promise<PositionData> {
+  console.log("TOKEN ID IN GET POS:", tokenId);
+  console.log("Chain in GET POS:", chain);
   const provider = new ethers.JsonRpcProvider("https://mainnet.era.zksync.io");
 
   // 1. Initialize Position Manager contract
