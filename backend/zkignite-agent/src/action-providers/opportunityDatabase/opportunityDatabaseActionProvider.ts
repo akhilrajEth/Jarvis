@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ActionProvider, CreateAction } from "@coinbase/agentkit";
+import { ActionProvider, EvmWalletProvider, Network, CreateAction } from "@coinbase/agentkit";
 import { createClient } from "@supabase/supabase-js";
 import { FetchOpportunitiesSchema } from "./schemas";
 import { OpportunityRecord } from "./types";
@@ -38,9 +38,9 @@ Retrieves current liquidity pool opportunities from Supabase database
       async function hashData(data: string): Promise<string> {
         const encoder = new TextEncoder();
         const dataBuffer = encoder.encode(data);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", dataBuffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
       }
 
       for (const record of data) {
@@ -49,7 +49,7 @@ Retrieves current liquidity pool opportunities from Supabase database
           console.error(`Data integrity check failed for opportunity_id: ${record.opportunity_id}`);
         }
       }
-      
+
       // Process records and validate that token addresses are in the correct order
       const validatedRecords = await Promise.all(
         data?.map(async ({ opportunity_id, subscription_data, active_positions }) => {
