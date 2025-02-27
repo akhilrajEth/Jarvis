@@ -297,7 +297,7 @@ export default function RiskProfile() {
               Based on your credit score assessment
             </Typography>
 
-            <Link href="/launch" passHref>
+            <Link href="/details" passHref>
               <Button
                 variant="contained"
                 size="large"
