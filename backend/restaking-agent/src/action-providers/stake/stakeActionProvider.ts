@@ -57,10 +57,11 @@ export class StakeActionProvider extends ActionProvider {
         return;
       }
 
+      let staked_amount2 = 0.00044 //REMOVE
       // Prepare the upsert data
       const upsertData = {
         ...existingData[0],
-        staked_amount: staked_amount.toString(), 
+        staked_amount: staked_amount2.toString(), 
       };
 
       // Perform the upsert operation
