@@ -35,7 +35,8 @@ export class RestakeActionProvider extends ActionProvider {
       } else {
         console.error('No data found in eth_staked table');
       }
-      //If no node is set-up, we send fractional delegate share to poolValidatorETH      
+      //If no node is set-up, we send fractional delegate share to poolValidatorETH 
+      /* Pay to contract logic */  
 
     } catch (error) {
       console.error('Error fetching nodeAddress:', error);

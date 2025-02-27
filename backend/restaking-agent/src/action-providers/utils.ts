@@ -7,6 +7,7 @@ import {
   Wallet,
   TransactionResponse,
   TransactionRequest,
+  Contract,
 } from "ethers";
 
 interface SignAndBroadcastParams {
@@ -15,6 +16,63 @@ interface SignAndBroadcastParams {
   maxFeeGas: string;
   maxPriorityFeeGas: string;
   amount: string;
+}
+
+// ABI of the contract (only including necessary functions)
+const abi = [
+  {
+    inputs: [],
+    name: "isPaused",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "totalDeposits",
+    outputs: [{ internalType: "uint256", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function"
+  }
+];
+
+// Contract address
+const contractAddress = '0xff7584928023CC991D255D4F1E36E9C6B7B8FEeE';
+
+// RPC URL
+// const rpcURL = "https://ethereum-holesky-rpc.publicnode.com";
+const rpcURL = "https://holesky.drpc.org"
+// Initialize provider
+const provider: JsonRpcProvider = new ethers.JsonRpcProvider(rpcURL);
+
+// Create contract instance
+const contract = new ethers.Contract(contractAddress, abi, provider);
+
+/**
+ * Fetches the contract balance
+ * @returns Promise<string> The balance in Ether
+ */
+export async function fetchContractBalance(): Promise<string> {
+  try {
+    const balance = await provider.getBalance(contractAddress);
+    return ethers.formatEther(balance); // Convert Wei to Ether
+  } catch (error) {
+    console.error('Error fetching contract balance:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetches the isPaused status of the contract
+ * @returns Promise<boolean> The paused status
+ */
+export async function fetchIsPaused(): Promise<boolean> {
+  try {
+    return await contract.isPaused();
+  } catch (error) {
+    console.error('Error querying isPaused:', error);
+    throw error;
+  }
 }
 
 /**
@@ -30,12 +88,6 @@ export async function signAndBroadcast(
 ): Promise<string> {
   console.log("Started signing and broadcasting transaction");
   try {
-    const rpcURL = "https://ethereum-holesky-rpc.publicnode.com";
-
-    // const rpcURL = "https://1rpc.io/holesky";
-
-    const provider: JsonRpcProvider = new ethers.JsonRpcProvider(rpcURL);
-
     console.log("PARAMS:", params);
     console.log("TX HEX:", params.txHex);
     // Parse transaction from hex string
@@ -61,7 +113,6 @@ export async function signAndBroadcast(
     };
 
     const txHash = await wallet.sendTransaction(txData);
-    // const txHash = await wallet.sendTransaction(txData, provider);
     await wallet.waitForTransactionReceipt(txHash);
 
     return `Transaction broadcasted successfully: ${txHash}`;

@@ -4,7 +4,7 @@ import { StakeSchema } from "./schemas";
 import { v4 as uuidv4 } from "uuid";
 import axios, { AxiosResponse } from "axios";
 import { supabase } from "../supabaseClient";
-import { signAndBroadcast } from "../utils";
+import { fetchContractBalance, signAndBroadcast } from "../utils";
 
 export class StakeActionProvider extends ActionProvider {
   public pubkey = "";
@@ -37,16 +37,43 @@ export class StakeActionProvider extends ActionProvider {
       //   amount: podResponse.value,
       // });
       // console.log(signedPodTx);
-
-      // if node exists in DB, restake there. 
-      // if value of tx.Amount + contract >= 32 ETH, then stake as normal
       
-      
+      //Only stake a new validator node if the ETHCollector contract is full/ > 32 ETH
+      let staked_amount = 2 //Harcoded staked value since RPC for wallet provider is down
+      let balance = await fetchContractBalance() 
+      if (staked_amount + parseFloat(balance) < 32){
+        /* Pay to contract logic */  
+      } //Otherwise stake full validator node(32 ETH)
 
 
-      // 
+      //Write staked_amount to supabase table user_staked_eth that has columns(id, staked_amount, created_at
+      const { data: existingData, error: fetchError } = await supabase
+        .from('user_staked_eth')
+        .select('*')
+        .limit(1);
 
+      if (fetchError) {
+        console.error('Error fetching existing data:', fetchError.message);
+        return;
+      }
 
+      // Prepare the upsert data
+      const upsertData = {
+        ...existingData[0],
+        staked_amount: staked_amount.toString(), 
+      };
+
+      // Perform the upsert operation
+      const { data, error } = await supabase
+        .from('user_staked_eth')
+        .upsert(upsertData)
+        .select();
+
+      if (error) {
+        console.error('Error updating staked amount:', error.message);
+      } else {
+        console.log('Staked amount updated successfully:', data);
+      }
       // Step 2: Create Restake Request
       console.log("Step 2: Creating Restake Request...");
       const { uuid, result: restakeRequest } = await this.createRestakeRequest(wallet.getAddress());
