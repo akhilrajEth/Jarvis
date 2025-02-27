@@ -46,7 +46,7 @@ export class StakeActionProvider extends ActionProvider {
       // Step 3: Check Restake Status with retry
       console.log("Step 3: Checking Restake Status...");
       const restakeStatus = await this.getRestakeStatusWithRetry(uuid);
-
+      
       // Step 4: Create Deposit Transaction
       console.log("Step 4: Creating Deposit Transaction...");
       const depositTxResponse = await this.createDepositTx(restakeStatus);
@@ -67,7 +67,9 @@ export class StakeActionProvider extends ActionProvider {
       });
 
       console.log(signedDepositTx);
-      this.addEthRestaked(depositTxResponse.value);
+      const weiValue = BigInt(depositTxResponse.value);
+      const ethValue = Number(weiValue) / 1e18;
+      this.storeNodeToDB(ethValue.toString(), this.pubkey);
 
       console.log(
         `\n🔍 View your validator on BeaconChain: https://holesky.beaconcha.in/validator/${this.pubkey}`,
@@ -198,12 +200,21 @@ export class StakeActionProvider extends ActionProvider {
     }
   }
 
-  private async addEthRestaked(depositAmount: string) {
+  private async storeNodeToDB(depositAmount: string, nodeAddress: string) {
+    //Just have one staking node, given users pool funds for restaking flows
+    const { data: dataStatus , error: err } = await supabase
+      .from('eth_restaked')
+      .select('*'); 
+
+    if(dataStatus.length > 0){
+      return
+    }
     const { data, error } = await supabase
       .from("eth_restaked")
       .insert([
         {
           deposit_amount: depositAmount,
+          node_address: nodeAddress,
         },
       ])
       .select();
