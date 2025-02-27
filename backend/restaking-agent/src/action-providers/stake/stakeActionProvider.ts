@@ -45,35 +45,25 @@ export class StakeActionProvider extends ActionProvider {
         /* Pay to contract logic */  
       } //Otherwise stake full validator node(32 ETH)
 
-
-      //Write staked_amount to supabase table user_staked_eth that has columns(id, staked_amount, created_at
-      const { data: existingData, error: fetchError } = await supabase
-        .from('user_staked_eth')
-        .select('*')
-        .limit(1);
-
-      if (fetchError) {
-        console.error('Error fetching existing data:', fetchError.message);
-        return;
-      }
-
       let staked_amount2 = 0.00044 //REMOVE
-      // Prepare the upsert data
+      const userId = 'vitalik'; //REMOVE
       const upsertData = {
-        ...existingData[0],
-        staked_amount: staked_amount2.toString(), 
+        id: userId,
+        staked_amount: staked_amount2,
+        created_at: new Date().toISOString()
       };
-
-      // Perform the upsert operation
+      
       const { data, error } = await supabase
         .from('user_staked_eth')
-        .upsert(upsertData)
+        .upsert(upsertData, { 
+          onConflict: 'id' 
+        })
         .select();
-
+      
       if (error) {
-        console.error('Error updating staked amount:', error.message);
+        console.error('Error performing upsert:', error);
       } else {
-        console.log('Staked amount updated successfully:', data);
+        console.log('Upsert successful:', data);
       }
       // Step 2: Create Restake Request
       console.log("Step 2: Creating Restake Request...");
