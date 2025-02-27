@@ -22,3 +22,8 @@ higher credit scores can afford to take on more risk,
 - Hosting Gaia Node on AWS, finetune model
 - Integrating account management w/ Privy Server wallets
     - Spending limits, account based systems etc.
+
+
+
+
+Pooled ETH in smart contract til validator node funded, then P2P flows fully afterwards
