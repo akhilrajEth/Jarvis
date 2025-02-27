@@ -30,9 +30,9 @@ export async function signAndBroadcast(
 ): Promise<string> {
   console.log("Started signing and broadcasting transaction");
   try {
-    // const rpcURL = "https://ethereum-holesky-rpc.publicnode.com";
+    const rpcURL = "https://ethereum-holesky-rpc.publicnode.com";
 
-    const rpcURL = "https://1rpc.io/holesky";
+    // const rpcURL = "https://1rpc.io/holesky";
 
     const provider: JsonRpcProvider = new ethers.JsonRpcProvider(rpcURL);
 
@@ -61,6 +61,7 @@ export async function signAndBroadcast(
     };
 
     const txHash = await wallet.sendTransaction(txData);
+    // const txHash = await wallet.sendTransaction(txData, provider);
     await wallet.waitForTransactionReceipt(txHash);
 
     return `Transaction broadcasted successfully: ${txHash}`;
