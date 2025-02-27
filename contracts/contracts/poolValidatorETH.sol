@@ -9,9 +9,17 @@ contract ETHCollector {
     uint256 public totalDeposits;
     bool public isPaused;
 
+    receive() external payable {
+        require(!isPaused, "Contract is paused");
+        _handleDeposit();
+    }
+
     function deposit() public payable {
         require(!isPaused, "Contract is paused");
-        
+        _handleDeposit();
+    }
+
+    function _handleDeposit() internal {
         deposits[msg.sender] += msg.value;
         totalDeposits += msg.value;
         

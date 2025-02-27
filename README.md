@@ -32,3 +32,4 @@ higher credit scores can afford to take on more risk,
 
 
 Pooled ETH in smart contract til validator node funded, then P2P flows fully afterwards
+SmartContract for P2P Delgating stake: 0xff7584928023CC991D255D4F1E36E9C6B7B8FEeE

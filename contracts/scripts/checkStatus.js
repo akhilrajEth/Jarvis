@@ -2,7 +2,7 @@ const { Web3 } = require('web3');
 
 const web3 = new Web3('https://holesky.drpc.org');
 
-// ABI of the contract (only including the isPaused function)
+// Updated ABI to include the balance-related functions
 const abi = [
   {
     "inputs": [],
@@ -10,10 +10,17 @@ const abi = [
     "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalDeposits",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
   }
 ];
 
-const contractAddress = '0xcd7A53085058BeD1e537660Cd90407134477a035';
+const contractAddress = '0xff7584928023CC991D255D4F1E36E9C6B7B8FEeE';
 
 // Create contract instance
 const contract = new web3.eth.Contract(abi, contractAddress);
@@ -24,9 +31,27 @@ async function queryIsPaused() {
     const isPaused = await contract.methods.isPaused().call();
     console.log('Is contract paused:', isPaused);
   } catch (error) {
-    console.error('Error querying contract:', error);
+    console.error('Error querying isPaused:', error);
   }
 }
 
-// Call the function
-queryIsPaused();
+// Query contract balance
+async function queryContractBalance() {
+  try {
+    const balance = await web3.eth.getBalance(contractAddress);
+    console.log('Contract balance:', web3.utils.fromWei(balance, 'ether'), 'ETH');
+
+    const totalDeposits = await contract.methods.totalDeposits().call();
+    console.log('Total deposits:', web3.utils.fromWei(totalDeposits, 'ether'), 'ETH');
+  } catch (error) {
+    console.error('Error querying contract balance:', error);
+  }
+}
+
+// Call the functions
+async function main() {
+  await queryIsPaused();
+  await queryContractBalance();
+}
+
+main();
