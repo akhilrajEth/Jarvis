@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { ethers } from "ethers";
 
 type ActivePositionDetails = {
   active_position_id: string;
@@ -7,6 +8,26 @@ type ActivePositionDetails = {
   tvl: string;
   total_apr: string;
 };
+
+export async function getStakedEthPositionData(): Promise<number | null> {
+  const supabaseUrl = "https://nibfafwhlabdjvkzpvuv.supabase.co";
+  const supabaseKey =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pYmZhZndobGFiZGp2a3pwdnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDQ5MDk3NTUsImV4cCI6MjAyMDQ4NTc1NX0.jWvB1p6VVEgG0sqjjsbL9EXNZpSWZfaAqA3uMCKx5AU";
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  const { data, error } = await supabase
+    .from("user_staked_eth")
+    .select("staked_amount")
+    .limit(1); // Add limit to get only first row
+
+  if (error) {
+    console.error("Error fetching staked ETH:", error);
+    return null;
+  }
+
+  return data?.[0]?.staked_amount ?? null;
+}
 
 export async function getActivePositionData(): Promise<
   ActivePositionDetails[]
@@ -62,8 +83,6 @@ export async function getActivePositionData(): Promise<
       };
     });
 }
-
-import { ethers } from "ethers";
 
 type PositionData = {
   token0Amount: string;

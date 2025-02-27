@@ -16,7 +16,11 @@ import {
 } from "@mui/material";
 import StopIcon from "@mui/icons-material/Stop";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { getActivePositionData, getPositionDetails } from "../utils/fetchData";
+import {
+  getActivePositionData,
+  getPositionDetails,
+  getStakedEthPositionData,
+} from "../utils/fetchData";
 
 type PositionWithTokens = {
   active_position_id: string;
@@ -30,6 +34,7 @@ type PositionWithTokens = {
 
 const Positions = () => {
   const [positions, setPositions] = useState<PositionWithTokens[]>([]);
+  const [stakedEth, setStakedEth] = useState<number | null>(null);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
 
   const handleCopyAddress = (address: string) => {
@@ -59,6 +64,9 @@ const Positions = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const ethStaked = await getStakedEthPositionData();
+        setStakedEth(ethStaked);
+
         const initialPositions = await getActivePositionData();
 
         if (!initialPositions?.length) return;
@@ -126,6 +134,10 @@ const Positions = () => {
     fetchData();
   }, []);
 
+  {
+    positions.length == 0 && stakedEth === null;
+  }
+
   return (
     <Box sx={{ maxWidth: "100%", padding: 4, marginTop: 8 }}>
       <Box
@@ -160,117 +172,223 @@ const Positions = () => {
         </Button>
       </Box>
 
-      <Paper
-        elevation={0}
-        sx={{
-          borderRadius: "12px",
-          overflow: "hidden",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-        }}
-      >
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                {[
-                  "Name",
-                  "TVL",
-                  "Total APR",
-                  "Pool Address",
-                  "Token0 Amount",
-                  "Token1 Amount",
-                ].map((header) => (
-                  <TableCell
-                    key={header}
+      {positions.length === 0 && stakedEth === null && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: 300,
+            backgroundColor: "#fafafa",
+            borderRadius: 2,
+            marginTop: 2,
+          }}
+        >
+          <Typography
+            variant="body1"
+            sx={{ color: "#757575", fontSize: "1.1rem" }}
+          >
+            No current LP positions or staked/restaked ETH
+          </Typography>
+        </Box>
+      )}
+
+      {positions.length > 0 && (
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: "12px",
+            overflow: "hidden",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+          }}
+        >
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                  {[
+                    "Liqudity Pool Opportunity",
+                    "TVL",
+                    "Total APR",
+                    "Pool Address",
+                    "Token0 Amount",
+                    "Token1 Amount",
+                  ].map((header) => (
+                    <TableCell
+                      key={header}
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: "0.875rem",
+                        color: "#424242",
+                        paddingY: 2,
+                      }}
+                    >
+                      {header}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {positions.map((position, index) => (
+                  <TableRow
+                    key={index}
                     sx={{
-                      fontWeight: 600,
-                      fontSize: "0.875rem",
-                      color: "#424242",
-                      paddingY: 2,
+                      "&:hover": { backgroundColor: "#f9f9f9" },
+                      transition: "background-color 0.2s ease",
                     }}
                   >
-                    {header}
-                  </TableCell>
+                    <TableCell sx={{ paddingY: 2 }}>{position.name}</TableCell>
+                    <TableCell sx={{ paddingY: 2 }}>
+                      ${parseFloat(position.tvl).toLocaleString()}
+                    </TableCell>
+                    <TableCell sx={{ paddingY: 2 }}>
+                      <Chip
+                        label={formatPercentage(position.total_apr)}
+                        size="small"
+                        sx={{
+                          backgroundColor:
+                            parseFloat(position.total_apr) >= 10
+                              ? "#e1f5fe"
+                              : "#f0f4c3",
+                          color:
+                            parseFloat(position.total_apr) >= 10
+                              ? "#0277bd"
+                              : "#827717",
+                          borderRadius: "6px",
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell sx={{ paddingY: 2 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <span
+                          style={{
+                            maxWidth: "120px",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {position.pool_address}
+                        </span>
+                        <Tooltip
+                          title={
+                            copiedAddress === position.pool_address
+                              ? "Copied!"
+                              : "Copy to clipboard"
+                          }
+                          arrow
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              handleCopyAddress(position.pool_address)
+                            }
+                            sx={{ padding: 0.5 }}
+                          >
+                            <ContentCopyIcon
+                              fontSize="small"
+                              sx={{ width: 16, height: 16 }}
+                            />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={{ paddingY: 2 }}>
+                      {formatTokenAmount(position.token0Amount)}
+                    </TableCell>
+                    <TableCell sx={{ paddingY: 2 }}>
+                      {formatTokenAmount(position.token1Amount)}
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {positions.map((position, index) => (
-                <TableRow
-                  key={index}
-                  sx={{
-                    "&:hover": { backgroundColor: "#f9f9f9" },
-                    transition: "background-color 0.2s ease",
-                  }}
-                >
-                  <TableCell sx={{ paddingY: 2 }}>{position.name}</TableCell>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
+
+      {stakedEth !== null && (
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: "12px",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+            marginTop: positions.length > 0 ? 12 : 0,
+          }}
+        >
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                  {[
+                    "Staked Amount",
+                    "Stake Status",
+                    "Restake Status",
+                    "Withdraw",
+                  ].map(
+                    // Added Withdraw column
+                    (header) => (
+                      <TableCell
+                        key={header}
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: "0.875rem",
+                          color: "#424242",
+                          paddingY: 2,
+                        }}
+                      >
+                        {header}
+                      </TableCell>
+                    )
+                  )}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow sx={{ "&:hover": { backgroundColor: "#f9f9f9" } }}>
                   <TableCell sx={{ paddingY: 2 }}>
-                    ${parseFloat(position.tvl).toLocaleString()}
+                    {stakedEth.toFixed(4)} ETH
                   </TableCell>
                   <TableCell sx={{ paddingY: 2 }}>
                     <Chip
-                      label={formatPercentage(position.total_apr)}
-                      size="small"
-                      sx={{
-                        backgroundColor:
-                          parseFloat(position.total_apr) >= 10
-                            ? "#e1f5fe"
-                            : "#f0f4c3",
-                        color:
-                          parseFloat(position.total_apr) >= 10
-                            ? "#0277bd"
-                            : "#827717",
-                        borderRadius: "6px",
-                      }}
+                      label="Pending"
+                      color="warning"
+                      sx={{ borderRadius: "6px" }}
                     />
                   </TableCell>
                   <TableCell sx={{ paddingY: 2 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <span
-                        style={{
-                          maxWidth: "120px",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {position.pool_address}
-                      </span>
-                      <Tooltip
-                        title={
-                          copiedAddress === position.pool_address
-                            ? "Copied!"
-                            : "Copy to clipboard"
-                        }
-                        arrow
-                      >
-                        <IconButton
-                          size="small"
-                          onClick={() =>
-                            handleCopyAddress(position.pool_address)
-                          }
-                          sx={{ padding: 0.5 }}
-                        >
-                          <ContentCopyIcon
-                            fontSize="small"
-                            sx={{ width: 16, height: 16 }}
-                          />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+                    <Chip
+                      label="Pending"
+                      color="warning"
+                      sx={{ borderRadius: "6px" }}
+                    />
                   </TableCell>
                   <TableCell sx={{ paddingY: 2 }}>
-                    {formatTokenAmount(position.token0Amount)}
-                  </TableCell>
-                  <TableCell sx={{ paddingY: 2 }}>
-                    {formatTokenAmount(position.token1Amount)}
+                    <Button
+                      variant="outlined"
+                      onClick={() => console.log("Withdraw clicked")} // Add your withdraw logic here
+                      sx={{
+                        borderColor: "#000",
+                        color: "#000",
+                        textTransform: "none",
+                        borderRadius: "20px",
+                        padding: "4px 16px",
+                        "&:hover": {
+                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                          borderColor: "#000",
+                        },
+                      }}
+                    >
+                      Withdraw
+                    </Button>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
     </Box>
   );
 };
