@@ -14,6 +14,8 @@ import { createWalletClient } from "viem";
 
 import { stakeActionProvider } from "./action-providers/stake/stakeActionProvider";
 import { restakeActionProvider } from "./action-providers/restake/restakeActionProvider";
+import { allocationCalculatorActionProvider } from "./action-providers/allocation/allocationCalculatorActionProvider";
+import { checkNativeEthBalanceActionProvider } from "./action-providers/balance/balanceActionProvider";
 import { getLangChainTools } from "@coinbase/agentkit-langchain";
 import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
@@ -84,6 +86,8 @@ async function initializeAgent() {
         stakeActionProvider(),
         restakeActionProvider(),
         walletActionProvider(),
+        allocationCalculatorActionProvider(),
+        checkNativeEthBalanceActionProvider(),
         cdpApiActionProvider({
           apiKeyName: process.env.CDP_API_KEY_NAME,
           apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
@@ -110,6 +114,8 @@ async function initializeAgent() {
       checkpointSaver: memory,
       messageModifier:
         "You are a helpful agent that can interact onchain using the Coinbase Developer Platform AgentKit." +
+        "If you need to check balance of your native token (ETH), then call the balanceActionProvider tool" +
+        "The balance returned from the balanceActionProvider is in units of wei" +
         "You are empowered to interact onchain using your tools. You are responsible for staking user funds.",
     });
 
@@ -136,6 +142,7 @@ async function runAutonomousMode(agent: any, config: any, interval = 10) {
     try {
       const thought =
         "You are a helpful agent that can interact onchain using the Coinbase Developer Platform AgentKit." +
+        "If you need to check balance of your native token (ETH), then call the balanceActionProvider tool." +
         "You are empowered to interact onchain using your tools. You are responsible for staking user funds.";
       const stream = await agent.stream({ messages: [new HumanMessage(thought)] }, config);
 
