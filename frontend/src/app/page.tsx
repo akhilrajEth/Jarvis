@@ -50,7 +50,7 @@ export default function Home() {
       </Typography>
 
       {/* Get Started Button */}
-      <Link href="/details" passHref>
+      <Link href="/positions" passHref>
         <Button
           variant="contained"
           size="large"
