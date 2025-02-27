@@ -9,11 +9,16 @@ Your AI agent that optimizes yield by autonomously managing Liquidity Pool posit
 Sit back, relax, get yield.
 
 # System Architecture
-*Whimsical diagram*
+Architectural diagram: https://whimsical.com/verifiable-ai-agent-data-architecture-TJQ2VNUxYtV17pCoVQjckF
 
-Verifiable Inference w/ Gaia, hashing for data integrity, ZkTLS for secure/verified data sharing, P2P to manage restaked ETH flows
+## Key points:
+- ZkTLS for secure sharing of data
+- Verifiable inference with Gaia
+- Hashing data to ensure integrity through centralized DB
+- P2P combined with custom smart contract to allow for fractional contributions to EigenLayer restaking node
 
 # Verifiable Risk Profile
+wip
 impermanent loss & ease to liquidate
 higher credit scores can afford to take on more risk,
 
