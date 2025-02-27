@@ -14,6 +14,9 @@ import {
 } from "@mui/material";
 import QRCode from "react-qr-code";
 import { ReclaimProofRequest } from "@reclaimprotocol/js-sdk/dist/index.js";
+import { supabase } from "@/supabaseClient";
+import { createHash } from 'crypto';
+
 
 export default function RiskProfile() {
   const [requestUrl, setRequestUrl] = useState<string>("");
@@ -74,8 +77,9 @@ export default function RiskProfile() {
             })?.[1] || { score: "Invalid score", lp: 0, restakedETH: 0 };
 
             setAllocation(allocation);
-            console.log()
-            //Page success stuff
+
+            //NOTE: no wallet context since user-management system not implemented yet, thus:
+            insertAllocationData("Vitalik", allocation.score, allocation.lp, allocation.restakedETH)
           } catch (parseError) {
             setError("Failed to parse verification results");
             console.error("Data Parsing Error:", parseError);
@@ -110,6 +114,41 @@ export default function RiskProfile() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const insertAllocationData = async (username: string, risk_score: string, lp: number, restaked_eth: number) => {
+    try {
+      const dataString = `${username}${risk_score}${lp}${restaked_eth}`;
+      const hash = createHash('sha256').update(dataString).digest('hex');
+
+      const { data: existingData, error: checkError } = await supabase
+        .from('verified_risk_profile')
+        .select('hash')
+        .eq('hash', hash)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      if (existingData) {
+        console.log('Data already exists, skipping insertion');
+        return;
+      }
+
+      // Insert new data with hash
+      const { data, error } = await supabase
+        .from('verified_risk_profile')
+        .insert([
+          { username, risk_score, lp, restaked_eth, hash }
+        ]);
+      
+      if (error) throw error;
+      console.log('Data inserted successfully:', data);
+    } catch (error) {
+      console.error('Error inserting data:', error);
+      setError('Failed to save allocation data');
     }
   };
 
