@@ -2,6 +2,7 @@ import { ActionProvider, EvmWalletProvider, Network, CreateAction } from "@coinb
 import { z } from "zod";
 import { RestakeSchema } from "./schemas";
 import axios, { AxiosResponse } from "axios";
+import { supabase } from "../supabaseClient";
 
 import { signAndBroadcast } from "../utils";
 
@@ -13,9 +14,30 @@ export class RestakeActionProvider extends ActionProvider {
   private API_BASE_URL = "https://api-test-holesky.p2p.org/api/v1/";
   private authToken = "Bearer scwaeTkXzol07FHmCSzJSMAc9v64qAVp";
 
-  private VALIDATOR_PUB_KEY =
-    "0x800934f77ed347994543783357b7ac27c98dd12d71c19c170830b3290fedd750266637854f8d3547bc23fa03fa9d2485";
+  private VALIDATOR_PUB_KEY = '';
   private OPERATOR_ADDRESS = "0x37d5077434723d0ec21d894a52567cbe6fb2c3d8";
+
+
+  //Restaking ETH flows are sent to the single validator node
+  async initialize() {
+    try {
+      const { data, error } = await supabase
+        .from('eth_staked')
+        .select('nodeAddress')
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        this.VALIDATOR_PUB_KEY = data.nodeAddress;
+        console.log('VALIDATOR_PUB_KEY set to:', this.VALIDATOR_PUB_KEY);
+      } else {
+        console.error('No data found in eth_staked table');
+      }
+    } catch (error) {
+      console.error('Error fetching nodeAddress:', error);
+    }
+  }
 
   @CreateAction({
     name: "retake",

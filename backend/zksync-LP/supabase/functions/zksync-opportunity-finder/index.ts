@@ -171,5 +171,4 @@ Deno.serve(async (req) => {
 
 */
 
-//Problem: Data from subgraphs etc. can be manipulated in supabase. How to have the API's data
-//  attestation get verified in the runtime of Agents deployment(Autonome) Autonome <> Opacity.
+//Problem: Data from subgraphs etc. can be manipulated in supabase. Hash on fetching from subgraph then verify on Agent to ensure integrity.

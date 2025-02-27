@@ -9,7 +9,9 @@ Your AI agent that optimizes yield by autonomously managing Liquidity Pool posit
 Sit back, relax, get yield.
 
 # System Architecture
-Verified Inference w/ Gaia, hashing for data integrity, ZkTLS for secure/verified data sharing, P2P to manage restaked ETH flows
+*Whimsical diagram*
+
+Verifiable Inference w/ Gaia, hashing for data integrity, ZkTLS for secure/verified data sharing, P2P to manage restaked ETH flows
 
 # Verifiable Risk Profile
 impermanent loss & ease to liquidate
@@ -17,6 +19,11 @@ higher credit scores can afford to take on more risk,
 
 
 # FIP
-- Hosting Gaia Node on AWS, finetune
+- Hosting Gaia Node on AWS, finetune model
 - Integrating account management w/ Privy Server wallets
     - Spending limits, account based systems etc.
+
+
+
+
+Pooled ETH in smart contract til validator node funded, then P2P flows fully afterwards
