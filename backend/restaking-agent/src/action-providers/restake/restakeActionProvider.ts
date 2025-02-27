@@ -28,12 +28,15 @@ export class RestakeActionProvider extends ActionProvider {
 
       if (error) throw error;
 
+      //If node already set-up, restaking flows go there
       if (data) {
         this.VALIDATOR_PUB_KEY = data.nodeAddress;
         console.log('VALIDATOR_PUB_KEY set to:', this.VALIDATOR_PUB_KEY);
       } else {
         console.error('No data found in eth_staked table');
       }
+      //If no node is set-up, we send fractional delegate share to poolValidatorETH      
+
     } catch (error) {
       console.error('Error fetching nodeAddress:', error);
     }

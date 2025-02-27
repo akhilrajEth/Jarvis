@@ -36,8 +36,16 @@ export class StakeActionProvider extends ActionProvider {
       //   maxPriorityFeeGas: podResponse.maxPriorityFeePerGas,
       //   amount: podResponse.value,
       // });
-
       // console.log(signedPodTx);
+
+      // if node exists in DB, restake there. 
+      // if value of tx.Amount + contract >= 32 ETH, then stake as normal
+      
+      
+
+
+      // 
+
 
       // Step 2: Create Restake Request
       console.log("Step 2: Creating Restake Request...");
