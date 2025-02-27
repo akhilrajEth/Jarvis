@@ -64,27 +64,40 @@ const Positions = () => {
         if (!initialPositions?.length) return;
 
         const mergedPositions = await Promise.all(
-          initialPositions.map(async (position) => {
-            let updatedPosition: PositionWithTokens = { ...position };
+          initialPositions
+            // First filter out invalid positions
+            .filter(
+              (p) =>
+                p.active_position_id &&
+                typeof p.active_position_id === "string" &&
+                p.active_position_id.trim() !== ""
+            )
+            // Then process valid positions
+            .map(async (position) => {
+              let updatedPosition: PositionWithTokens = { ...position };
 
-            if (position.name?.toLowerCase().includes("syncswap")) {
-              try {
-                const swapData = await getPositionDetails(
-                  position.active_position_id,
-                  "sync"
-                );
-                updatedPosition = {
-                  ...updatedPosition,
-                  token0Amount: swapData.token0Amount,
-                  token1Amount: swapData.token1Amount,
-                };
-              } catch (error) {
-                console.error("Error fetching position details:", error);
+              // Only process SyncSwap positions with valid ID
+              if (position.name?.toLowerCase().includes("syncswap")) {
+                try {
+                  const swapData = await getPositionDetails(
+                    position.active_position_id.trim(), // Ensure clean string
+                    "sync"
+                  );
+                  updatedPosition = {
+                    ...updatedPosition,
+                    token0Amount: swapData.token0Amount,
+                    token1Amount: swapData.token1Amount,
+                  };
+                } catch (error) {
+                  console.error(
+                    `Failed to fetch details for position ${position.active_position_id}:`,
+                    error
+                  );
+                }
               }
-            }
 
-            return updatedPosition;
-          })
+              return updatedPosition;
+            })
         );
 
         setPositions(mergedPositions);

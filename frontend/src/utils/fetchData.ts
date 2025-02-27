@@ -42,8 +42,11 @@ export async function getActivePositionData(): Promise<
 
   // Combine data from both queries
   return positionsData
-    .filter((position) =>
-      opportunitiesData.some((opp) => opp.id === position.opportunity_id)
+    .filter(
+      (position) =>
+        opportunitiesData.some((opp) => opp.id === position.opportunity_id) &&
+        position.active_positions !== null && // Check for null
+        position.active_positions.trim() !== "" // Check for empty string
     )
     .map((position) => {
       const opportunity = opportunitiesData.find(
@@ -51,7 +54,7 @@ export async function getActivePositionData(): Promise<
       )!;
 
       return {
-        active_position_id: position.active_positions!,
+        active_position_id: position.active_positions!, // Now safe to assert non-null
         pool_address: opportunity.pool_address,
         name: opportunity.name,
         tvl: String(opportunity.tvl),
@@ -129,6 +132,8 @@ export async function getPositionDetails(
   const amount0 = (liquidity * 10n ** BigInt(decimals0)) / 10n ** 18n;
   const amount1 = (liquidity * 10n ** BigInt(decimals1)) / 10n ** 18n;
 
+  console.log("Token 0 Amount:", ethers.formatUnits(amount0, decimals0));
+  console.log("Token 1 Amount:", ethers.formatUnits(amount1, decimals1));
   return {
     token0Amount: ethers.formatUnits(amount0, decimals0),
     token1Amount: ethers.formatUnits(amount1, decimals1),
