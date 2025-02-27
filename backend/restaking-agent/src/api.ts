@@ -113,7 +113,7 @@ async function initializeAgent() {
       checkpointSaver: memory,
       messageModifier:
         "You are a helpful agent that can interact onchain using the Coinbase Developer Platform AgentKit." +
-        "You are empowered to interact onchain using your tools. When you are run, stake ETH by calling the eth staking tool.";
+        "You are empowered to interact onchain using your tools. When you are run, stake ETH by calling the eth staking tool. Do not call the restake tool.",
     });
 
     return { agent, config: agentConfig };
@@ -139,7 +139,7 @@ async function runAutonomousMode(agent: any, config: any, interval = 10) {
     try {
       const thought =
         "You are a helpful agent that can interact onchain using the Coinbase Developer Platform AgentKit." +
-        "You are empowered to interact onchain using your tools. When you are run, stake ETH by calling the eth staking tool.";
+        "You are empowered to interact onchain using your tools. When you are run, stake ETH by calling the eth staking tool. Do not call the restake tool.";
       const stream = await agent.stream({ messages: [new HumanMessage(thought)] }, config);
 
       for await (const chunk of stream) {
