@@ -22,7 +22,7 @@ Architectural Diagram: https://whimsical.com/verifiable-ai-agent-data-architectu
 ## Key points:
 - ZkTLS for secure sharing of data (via Reclaim Protocol's web sdk)
 - Verifiable inference with Gaia
-- Hashing data to ensure integrity through centralized DB
+- Hashing data to ensure integrity of centralized DB
 - P2P combined with custom smart contract to allow for fractional contributions to EigenLayer restaking node
 - 12 custom actions added to Coinbase Developer Platform's Agentkit for Jarvis to autonomously manage your money
 
@@ -40,12 +40,10 @@ Our logic is that an individual with a higher risk score can afford to enter ris
 In the future, we want to include more data points and leverage the verifiable risk profile to determine which LP positions to enter since some pools may consist of tokens that are less correlated in the short term. We also want to use the profile to determine how much we should allocate to less liquid positions. 
 
 # Future Improvements
-- Hosting Gaia Node on AWS, finetune model
-- Integrating account management w/ Privy Server wallets
-    - Spending limits, account based systems etc.
+- Hosting Gaia Node on AWS for production usage, finetune model for consistently optimized agent activity
+- Integrating Privy Server wallets for account management & agent spending limits 
+- Add more verifiable risk metrics to gauge risk with ZkTLS(Investment accounts & spending activity)
 
 
-
-
-Pooled ETH in smart contract til validator node funded, then P2P flows fully afterwards
-SmartContract for P2P Delgating stake: 0xff7584928023CC991D255D4F1E36E9C6B7B8FEeE
+# References
+smart contract for pooling P2P validator node: 0xff7584928023CC991D255D4F1E36E9C6B7B8FEeE
