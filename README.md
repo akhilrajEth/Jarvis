@@ -50,7 +50,7 @@ Currently leveraged as a social media bullposting agent for the Jarvis platform,
 Account: https://x.com/jarvis_xbt
 
 # References
-Smart contract for pooling P2P validator node (Holesky ETH): 0xff7584928023CC991D255D4F1E36E9C6B7B8FEeE
-ZK Ignite Program: https://zksyncignite.xyz/
+- Smart contract for pooling P2P validator node (Holesky ETH): 0xff7584928023CC991D255D4F1E36E9C6B7B8FEeE
+- ZK Ignite Program: https://zksyncignite.xyz/
 
 
