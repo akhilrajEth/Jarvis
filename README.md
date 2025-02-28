@@ -8,7 +8,7 @@ To start, we're targetting the ZKIgnite Program, where 300M ZK tokens (~30M USD)
 
 
 # How's it work?
-1. Verifiable Risk Profile: we securely verify your CreditKarma credit score via ZkTLS
+1. Verifiable Risk Profile: We securely verify your CreditKarma credit score via ZkTLS
 2. Review your yield strategy split determined by your Verifiable Risk Profile, and set it off!
 3. Jarvis will autonomously manage LP positions across ZKSync boosted LP Pools & restaked ETH, rebalancing when necessary.
 
