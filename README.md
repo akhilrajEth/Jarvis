@@ -9,8 +9,8 @@ To start, we're targetting the ZKIgnite Program, where 300M ZK tokens (~30M USD)
 
 # How's it work?
 1. Verifiable Risk Profile: We securely verify your CreditKarma credit score via ZkTLS
-2. Review your yield strategy split determined by your Verifiable Risk Profile, and set it off!
-3. Jarvis will autonomously manage LP positions across ZKSync boosted LP Pools & restaked ETH, rebalancing when necessary.
+2. Review your yield strategy split determined by your Verifiable Risk Profile and set it off!
+3. Jarvis will autonomously manage LP positions across ZKSync boosted LP Pools and restaked ETH, rebalancing when necessary.
 
 Sit back, relax, get yield.
 
@@ -21,19 +21,26 @@ Architectural Diagram: https://whimsical.com/verifiable-ai-agent-data-architectu
 
 
 ## Key points:
-- ZkTLS for secure sharing of data
+- ZkTLS for secure sharing of data (via Reclaim Protocol's web sdk)
 - Verifiable inference with Gaia
 - Hashing data to ensure integrity through centralized DB
 - P2P combined with custom smart contract to allow for fractional contributions to EigenLayer restaking node
 - 12 custom actions added to Coinbase Developer Platform's Agentkit for Jarvis to autonomously manage your money
 
 # Verifiable Risk Profile
-wip
-impermanent loss & ease to liquidate
-higher credit scores can afford to take on more risk,
+The verifiable risk profile is generated through a user's credit score. The user's allocation is then generated based on the credit score: 
 
+- 300-578: Credit Sore: Poor => LP: 20%, Restaked ETH: 80%
+- 579-668: Credit Score: Fair => LP: 35%, Restaked ETH: 65%
+- 669-738: Credit Score: Good => LP: 50%, Restaked ETH: 50%
+- 739-798: Credit Score: Very good => LP: 65%, Restaked ETH: 35%
+- 799-850: Credit Score: Excellent => LP: 80%, Restaked ETH: 20%
 
-# FIP
+Our logic is that an individual with a higher risk score can afford to enter riskier yield generating positions than someone with a lower risk score. 
+
+In the future, we want to include more data points and leverage the verifiable risk profile to determine which LP positions to enter since some pools may consist of tokens that are less correlated in the short term. We also want to use the profile to determine how much we should allocate to less liquid positions. 
+
+# Future Improvements
 - Hosting Gaia Node on AWS, finetune model
 - Integrating account management w/ Privy Server wallets
     - Spending limits, account based systems etc.
