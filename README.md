@@ -44,7 +44,13 @@ In the future, we want to include more data points and leverage the verifiable r
 - Integrating Privy Server wallets for account management & agent spending limits 
 - Add more verifiable risk metrics to gauge risk with ZkTLS (e.g. investment accounts and spending activity)
 
+# Autonome Agent
+Currently leveraged as a social media bullposting agent for the Jarvis platform, trained on a yield farming knowledge-base with finetuning on the posts of Luke Youngblood & Gammichan. 
+
+Account: https://x.com/jarvis_xbt
 
 # References
 Smart contract for pooling P2P validator node (Holesky ETH): 0xff7584928023CC991D255D4F1E36E9C6B7B8FEeE
 ZK Ignite Program: https://zksyncignite.xyz/
+
+
