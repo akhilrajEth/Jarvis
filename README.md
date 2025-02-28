@@ -16,7 +16,7 @@ Sit back, relax, get yield.
 # System Architecture
 Architectural Diagram: https://whimsical.com/verifiable-ai-agent-data-architecture-TJQ2VNUxYtV17pCoVQjckF
 
-![image](https://github.com/user-attachments/assets/d9d5ac98-cc02-43a0-b519-c68f6551dbac)
+![image](https://github.com/user-attachments/assets/a9e8ea85-1ab0-4f1a-99f6-5d66a736fe18)
 
 
 ## Key points:
@@ -42,8 +42,8 @@ In the future, we want to include more data points and leverage the verifiable r
 # Future Improvements
 - Hosting Gaia Node on AWS for production usage, finetune model for consistently optimized agent activity
 - Integrating Privy Server wallets for account management & agent spending limits 
-- Add more verifiable risk metrics to gauge risk with ZkTLS(Investment accounts & spending activity)
+- Add more verifiable risk metrics to gauge risk with ZkTLS (e.g. investment accounts and spending activity)
 
 
 # References
-smart contract for pooling P2P validator node(Holesky ETH): 0xff7584928023CC991D255D4F1E36E9C6B7B8FEeE
+Smart contract for pooling P2P validator node (Holesky ETH): 0xff7584928023CC991D255D4F1E36E9C6B7B8FEeE
