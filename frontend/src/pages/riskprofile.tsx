@@ -78,7 +78,7 @@ export default function RiskProfile() {
 
             setAllocation(allocation);
 
-            //NOTE: No wallet context since user-management system not implemented yet, thus:
+            // NOTE: No wallet context since user-management system not implemented yet, thus:
             insertAllocationData(
               "Vitalik",
               allocation.score,

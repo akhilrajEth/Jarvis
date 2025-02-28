@@ -1,20 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 import { ethers } from "ethers";
 import { supabase } from "./supabaseClient";
-
-type ActivePositionDetails = {
-  active_position_id: string;
-  pool_address: string;
-  name: string;
-  tvl: string;
-  total_apr: string;
-};
+import { ActivePositionDetails, PositionData } from "./types";
+import { PANCAKE_POSITION_MANAGER, SYNC_POSITION_MANAGER } from "./constants";
 
 export async function getStakedEthPositionData(): Promise<number | null> {
   const { data, error } = await supabase
     .from("user_staked_eth")
     .select("staked_amount")
-    .limit(1); // Add limit to get only first row
+    .limit(1);
 
   if (error) {
     console.error("Error fetching staked ETH:", error);
@@ -33,7 +27,7 @@ export async function getActivePositionData(): Promise<
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  // First query: Get active positions with opportunity IDs
+  //  Get active positions with opportunity IDs
   const { data: positionsData, error: positionsError } = await supabase
     .from("agent_subscription_data")
     .select("active_positions, opportunity_id")
@@ -47,7 +41,7 @@ export async function getActivePositionData(): Promise<
     .map((p) => p.opportunity_id)
     .filter((id): id is string => !!id);
 
-  // Second query: Get opportunity details
+  // Get opportunity details
   const { data: opportunitiesData, error: opportunitiesError } = await supabase
     .from("opportunities")
     .select("id, pool_address, name, tvl, total_apr")
@@ -61,8 +55,8 @@ export async function getActivePositionData(): Promise<
     .filter(
       (position) =>
         opportunitiesData.some((opp) => opp.id === position.opportunity_id) &&
-        position.active_positions !== null && // Check for null
-        position.active_positions.trim() !== "" // Check for empty string
+        position.active_positions !== null &&
+        position.active_positions.trim() !== ""
     )
     .map((position) => {
       const opportunity = opportunitiesData.find(
@@ -70,7 +64,7 @@ export async function getActivePositionData(): Promise<
       )!;
 
       return {
-        active_position_id: position.active_positions!, // Now safe to assert non-null
+        active_position_id: position.active_positions!,
         pool_address: opportunity.pool_address,
         name: opportunity.name,
         tvl: String(opportunity.tvl),
@@ -79,27 +73,12 @@ export async function getActivePositionData(): Promise<
     });
 }
 
-type PositionData = {
-  token0Amount: string;
-  token1Amount: string;
-  uncollectedFees: {
-    token0: string;
-    token1: string;
-  };
-};
-
-const PANCAKE_POSITION_MANAGER = "0xa815e2eD7f7d5B0c49fda367F249232a1B9D2883";
-const SYNC_POSITION_MANAGER = "0x7581a80c84d7488be276e6c7b4c1206f25946502";
-
 export async function getPositionDetails(
   tokenId: string,
   chain: "pancake" | "sync"
 ): Promise<PositionData> {
-  console.log("TOKEN ID IN GET POS:", tokenId);
-  console.log("Chain in GET POS:", chain);
   const provider = new ethers.JsonRpcProvider("https://mainnet.era.zksync.io");
 
-  // 1. Initialize Position Manager contract
   const positionManager = new ethers.Contract(
     chain === "pancake" ? PANCAKE_POSITION_MANAGER : SYNC_POSITION_MANAGER,
     [
@@ -109,7 +88,6 @@ export async function getPositionDetails(
     provider
   );
 
-  // 2. Get position data
   const position = await positionManager.positions(tokenId);
   const [
     ,
@@ -126,7 +104,6 @@ export async function getPositionDetails(
     tokensOwed1,
   ] = position;
 
-  // 3. Get token decimals
   const token0Contract = new ethers.Contract(
     token0,
     ["function decimals() view returns (uint8)"],
@@ -144,12 +121,10 @@ export async function getPositionDetails(
     token1Contract.decimals(),
   ]);
 
-  // 4. Calculate token amounts (simplified calculation)
+  // Calculate token amounts
   const amount0 = (liquidity * 10n ** BigInt(decimals0)) / 10n ** 18n;
   const amount1 = (liquidity * 10n ** BigInt(decimals1)) / 10n ** 18n;
 
-  console.log("Token 0 Amount:", ethers.formatUnits(amount0, decimals0));
-  console.log("Token 1 Amount:", ethers.formatUnits(amount1, decimals1));
   return {
     token0Amount: ethers.formatUnits(amount0, decimals0),
     token1Amount: ethers.formatUnits(amount1, decimals1),
