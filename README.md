@@ -6,7 +6,7 @@ Interacting with DeFi protocols is complex and time-consuming (e.g. swapping, br
 
 To start, we're targeting the ZKIgnite Program, where 300M ZK tokens (~30M USD) are allocated to boost DeFi positions on ZKSync for the next 6 months. LP pools have some of the highest boosted APR in the program (50-80% APR). New opportunities are introduced every two weeks, and the total APR (boosted APR + native APR) changes every few days. Jarvis will keep track of all new opportunities, calculate the total APR, create new positions for LP pools with the highest APR, and remove liquidity from positions with APRs that have decreased over time. 
 
-# How's it work?
+# How does it work?
 1. Verifiable Risk Profile: We securely verify your CreditKarma credit score via ZkTLS 
 2. Review your yield strategy split determined by your Verifiable Risk Profile and set it off!
 3. Jarvis will autonomously manage LP positions across ZKSync boosted LP Pools and restaked ETH, rebalancing when necessary.
