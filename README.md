@@ -16,7 +16,7 @@ Sit back, relax, get yield.
 # System Architecture
 Architectural Diagram: https://whimsical.com/verifiable-ai-agent-data-architecture-TJQ2VNUxYtV17pCoVQjckF
 
-![image](https://github.com/user-attachments/assets/a9e8ea85-1ab0-4f1a-99f6-5d66a736fe18)
+![image](https://github.com/user-attachments/assets/159cc92b-5cf9-41bd-8061-e3a72a85f04e)
 
 
 ## Key points:
