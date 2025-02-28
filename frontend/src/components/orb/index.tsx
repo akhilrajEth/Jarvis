@@ -1,12 +1,7 @@
 "use client";
 
 import { styled } from "@mui/system";
-
-interface GlowOrbProps {
-  size?: number;
-  color?: string;
-  top?: string;
-}
+import { GlowOrbProps } from "./types";
 
 const Orb = styled("div", {
   shouldForwardProp: (prop) =>

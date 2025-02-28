@@ -13,95 +13,24 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Link from "next/link";
-
+import {
+  detailPageStyles,
+  allocationItems,
+  detailsPageButtonStyles,
+} from "./constants";
 export default function Allocation() {
   const [expanded, setExpanded] = useState(false);
   const handleChange = (panel) => (_, isExpanded) =>
     setExpanded(isExpanded ? panel : false);
 
-  const styles = {
-    container: {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      minHeight: "100vh",
-      p: 4,
-      bgcolor: "#ffffff", // Pure white background
-    },
-    title: {
-      fontWeight: 500,
-      mb: 4,
-      textAlign: "center",
-    },
-    subtitle: {
-      mb: 4,
-      textAlign: "center",
-      color: "#555",
-      fontWeight: 500,
-    },
-    paper: {
-      width: "100%",
-      maxWidth: 600,
-      p: 4,
-      borderRadius: 2,
-      boxShadow: "0 2px 12px rgba(0,0,0,0.06)", // Subtle shadow
-      bgcolor: "#ffffff",
-    },
-    accordion: {
-      boxShadow: "none",
-      border: "1px solid #eaeaea",
-      borderRadius: "8px !important",
-      "&:before": { display: "none" },
-      overflow: "hidden",
-      mb: 2,
-    },
-    accordionSummary: {
-      borderBottom: expanded ? "1px solid #eaeaea" : "none",
-      "&:hover": { bgcolor: "#fafafa" },
-    },
-    listContainer: {
-      pl: 2,
-    },
-    listItem: {
-      display: "flex",
-      alignItems: "center",
-      mb: 1.5,
-    },
-    bullet: {
-      mr: 1.5,
-      fontSize: "0.8rem",
-      color: "#777",
-    },
-  };
-
-  // Data structure for allocation items
-  const allocationItems = [
-    {
-      title: "LP Pools on ZKSync's ZKIgnite Program",
-      details: [
-        "Streaming 300M ZK tokens (~30M USD)",
-        "Boosting LP opportunities over 9 months",
-        "Opportunites + boosted APR changes every 2 weeks",
-      ],
-    },
-    {
-      title: "Restaked ETH via P2P",
-      details: [
-        "Distributing rewards across 35+ networks (~$7B staked)",
-        "Takes 1 day to stake and 7 days to unstake",
-        "Enhancing staking yields over variable terms",
-      ],
-    },
-  ];
-
   return (
-    <Box sx={styles.container}>
-      <Typography variant="h4" component="h1" sx={styles.title}>
+    <Box sx={detailPageStyles.container}>
+      <Typography variant="h4" component="h1" sx={detailPageStyles.title}>
         Here's where your money is going
       </Typography>
 
-      <Paper elevation={0} sx={styles.paper}>
-        <Typography variant="h6" component="h2" sx={styles.subtitle}>
+      <Paper elevation={0} sx={detailPageStyles.paper}>
+        <Typography variant="h6" component="h2" sx={detailPageStyles.subtitle}>
           Allocation Breakdown
         </Typography>
 
@@ -111,12 +40,12 @@ export default function Allocation() {
               key={index}
               expanded={expanded === `panel${index + 1}`}
               onChange={handleChange(`panel${index + 1}`)}
-              sx={styles.accordion}
+              sx={detailPageStyles.accordion}
               disableGutters
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
-                sx={styles.accordionSummary}
+                sx={detailPageStyles.accordionSummary}
               >
                 <Typography variant="subtitle1" fontWeight={500}>
                   {item.title}
@@ -124,7 +53,7 @@ export default function Allocation() {
               </AccordionSummary>
 
               <AccordionDetails>
-                <Box sx={styles.listContainer}>
+                <Box sx={detailPageStyles.listContainer}>
                   {item.details.map((detail, i) => (
                     <Box
                       key={i}
@@ -153,16 +82,7 @@ export default function Allocation() {
             <Button
               variant="contained"
               size="large"
-              sx={{
-                backgroundColor: "#000",
-                color: "#fff",
-                textTransform: "none",
-                paddingX: 4,
-                borderRadius: "24px",
-                "&:hover": {
-                  backgroundColor: "#333",
-                },
-              }}
+              sx={detailsPageButtonStyles}
             >
               Next
             </Button>

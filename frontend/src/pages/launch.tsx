@@ -21,7 +21,6 @@ export default function Launch() {
 
       if (restakingAgentResponse.ok && zkIgniteAgentResponse.ok) {
         const result = await restakingAgentResponse.text();
-        console.log("Agent response:", result);
         router.push("/positions");
       }
     } catch (error) {
@@ -31,17 +30,7 @@ export default function Launch() {
   };
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        textAlign: "center",
-        padding: 2,
-      }}
-    >
+    <Box sx={launchBoxStyles}>
       <Stack spacing={4} sx={{ alignItems: "center" }}>
         <GlowOrb size={150} color="rgba(100, 200, 255, 0.3)" top="15%" />
 
@@ -59,16 +48,7 @@ export default function Launch() {
         <Button
           variant="contained"
           size="large"
-          sx={{
-            backgroundColor: "#000",
-            color: "#fff",
-            textTransform: "none",
-            paddingX: 4,
-            borderRadius: "24px",
-            "&:hover": {
-              backgroundColor: "#333",
-            },
-          }}
+          sx={launchButtonStyles}
           onClick={handleLaunch}
         >
           Launch

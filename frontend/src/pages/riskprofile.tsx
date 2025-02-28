@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import QRCode from "react-qr-code";
 import { ReclaimProofRequest } from "@reclaimprotocol/js-sdk/dist/index.js";
-import { supabase } from "@/supabaseClient";
+import { supabase } from "../utils/supabaseClient";
 import { createHash } from "crypto";
 import Link from "next/link";
 
@@ -78,7 +78,7 @@ export default function RiskProfile() {
 
             setAllocation(allocation);
 
-            //NOTE: no wallet context since user-management system not implemented yet, thus:
+            //NOTE: No wallet context since user-management system not implemented yet, thus:
             insertAllocationData(
               "Vitalik",
               allocation.score,

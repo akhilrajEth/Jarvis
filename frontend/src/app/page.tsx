@@ -4,22 +4,12 @@ import React from "react";
 import { Box, Typography, Button } from "@mui/material";
 import { styled } from "@mui/system";
 import { GlowOrb } from "../components/orb";
-
+import { BoxStyles, ButtonStyles } from "./constants";
 import Link from "next/link";
 
 export default function Home() {
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        textAlign: "center",
-        padding: 2,
-      }}
-    >
+    <Box sx={BoxStyles}>
       <GlowOrb size={150} color="rgba(100, 200, 255, 0.3)" top="15%" />
 
       {/* Main Heading */}
@@ -51,20 +41,7 @@ export default function Home() {
 
       {/* Get Started Button */}
       <Link href="/riskprofile" passHref>
-        <Button
-          variant="contained"
-          size="large"
-          sx={{
-            backgroundColor: "#000",
-            color: "#fff",
-            textTransform: "none",
-            paddingX: 4,
-            borderRadius: "24px",
-            "&:hover": {
-              backgroundColor: "#333",
-            },
-          }}
-        >
+        <Button variant="contained" size="large" sx={ButtonStyles}>
           Get Started
         </Button>
       </Link>
