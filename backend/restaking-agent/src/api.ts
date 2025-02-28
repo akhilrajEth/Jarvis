@@ -162,101 +162,12 @@ async function runAutonomousMode(agent: any, config: any, interval = 10) {
 }
 
 /**
- * Run the agent interactively based on user input
- *
- * @param agent - The agent executor
- * @param config - Agent configuration
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-// async function runChatMode(agent: any, config: any) {
-//   console.log("Starting chat mode... Type 'exit' to end.");
-
-//   const rl = readline.createInterface({
-//     input: process.stdin,
-//     output: process.stdout,
-//   });
-
-//   const question = (prompt: string): Promise<string> =>
-//     new Promise(resolve => rl.question(prompt, resolve));
-
-//   try {
-//     // eslint-disable-next-line no-constant-condition
-//     while (true) {
-//       const userInput = await question("\nPrompt: ");
-
-//       if (userInput.toLowerCase() === "exit") {
-//         break;
-//       }
-
-//       const stream = await agent.stream({ messages: [new HumanMessage(userInput)] }, config);
-
-//       for await (const chunk of stream) {
-//         if ("agent" in chunk) {
-//           console.log(chunk.agent.messages[0].content);
-//         } else if ("tools" in chunk) {
-//           console.log(chunk.tools.messages[0].content);
-//         }
-//         console.log("-------------------");
-//       }
-//     }
-//   } catch (error) {
-//     if (error instanceof Error) {
-//       console.error("Error:", error.message);
-//     }
-//     process.exit(1);
-//   } finally {
-//     rl.close();
-//   }
-// }
-
-/**
- * Choose whether to run in autonomous or chat mode based on user input
- *
- * @returns Selected mode
- */
-// async function chooseMode(): Promise<"chat" | "auto"> {
-//   const rl = readline.createInterface({
-//     input: process.stdin,
-//     output: process.stdout,
-//   });
-
-//   const question = (prompt: string): Promise<string> =>
-//     new Promise(resolve => rl.question(prompt, resolve));
-
-//   // eslint-disable-next-line no-constant-condition
-//   while (true) {
-//     console.log("\nAvailable modes:");
-//     console.log("1. chat    - Interactive chat mode");
-//     console.log("2. auto    - Autonomous action mode");
-
-//     const choice = (await question("\nChoose a mode (enter number or name): "))
-//       .toLowerCase()
-//       .trim();
-
-//     if (choice === "1" || choice === "chat") {
-//       rl.close();
-//       return "chat";
-//     } else if (choice === "2" || choice === "auto") {
-//       rl.close();
-//       return "auto";
-//     }
-//     console.log("Invalid choice. Please try again.");
-//   }
-// }
-
-/**
  * Start the chatbot agent
  */
 async function main() {
   try {
     const { agent, config } = await initializeAgent();
-    // const mode = await chooseMode();
 
-    // if (mode === "chat") {
-    //   await runChatMode(agent, config);
-    // } else {
-    //   await runAutonomousMode(agent, config);
-    // }
     await runAutonomousMode(agent, config);
   } catch (error) {
     if (error instanceof Error) {

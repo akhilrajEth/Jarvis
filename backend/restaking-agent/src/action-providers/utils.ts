@@ -25,23 +25,23 @@ const abi = [
     name: "isPaused",
     outputs: [{ internalType: "bool", name: "", type: "bool" }],
     stateMutability: "view",
-    type: "function"
+    type: "function",
   },
   {
     inputs: [],
     name: "totalDeposits",
     outputs: [{ internalType: "uint256", name: "", type: "bool" }],
     stateMutability: "view",
-    type: "function"
-  }
+    type: "function",
+  },
 ];
 
 // Contract address
-const contractAddress = '0xff7584928023CC991D255D4F1E36E9C6B7B8FEeE';
+const contractAddress = "0xff7584928023CC991D255D4F1E36E9C6B7B8FEeE";
 
 // RPC URL
-// const rpcURL = "https://ethereum-holesky-rpc.publicnode.com";
-const rpcURL = "https://holesky.drpc.org"
+// const rpcURL = "https://ethereum-holesky-rpc.publicnode.com"; // Public RPC
+const rpcURL = "https://holesky.drpc.org";
 // Initialize provider
 const provider: JsonRpcProvider = new ethers.JsonRpcProvider(rpcURL);
 
@@ -57,7 +57,7 @@ export async function fetchContractBalance(): Promise<string> {
     const balance = await provider.getBalance(contractAddress);
     return ethers.formatEther(balance); // Convert Wei to Ether
   } catch (error) {
-    console.error('Error fetching contract balance:', error);
+    console.error("Error fetching contract balance:", error);
     throw error;
   }
 }
@@ -70,7 +70,7 @@ export async function fetchIsPaused(): Promise<boolean> {
   try {
     return await contract.isPaused();
   } catch (error) {
-    console.error('Error querying isPaused:', error);
+    console.error("Error querying isPaused:", error);
     throw error;
   }
 }
