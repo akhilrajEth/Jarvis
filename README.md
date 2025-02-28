@@ -47,3 +47,4 @@ In the future, we want to include more data points and leverage the verifiable r
 
 # References
 Smart contract for pooling P2P validator node (Holesky ETH): 0xff7584928023CC991D255D4F1E36E9C6B7B8FEeE
+ZK Ignite Program: https://zksyncignite.xyz/
