@@ -1,13 +1,29 @@
 "use client";
 
-import React from "react";
+import { useState, React } from "react";
 import { Box, Typography, Button } from "@mui/material";
 import { styled } from "@mui/system";
 import { GlowOrb } from "../components/orb";
+import SignupPopup from "../components/signup";
 import { BoxStyles, ButtonStyles } from "./constants";
 import Link from "next/link";
 
 export default function Home() {
+  const [open, setOpen] = useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleSignup = (email: string, password: string) => {
+    // Implement signup logic here
+    console.log("Signup attempt with:", { email, password });
+  };
+
   return (
     <Box sx={BoxStyles}>
       <GlowOrb size={150} color="rgba(100, 200, 255, 0.3)" top="15%" />
@@ -40,11 +56,16 @@ export default function Home() {
       </Typography>
 
       {/* Get Started Button */}
-      <Link href="/riskprofile" passHref>
-        <Button variant="contained" size="large" sx={ButtonStyles}>
-          Get Started
-        </Button>
-      </Link>
+      <Button
+        variant="contained"
+        size="large"
+        sx={ButtonStyles}
+        onClick={handleClickOpen}
+      >
+        Get Started
+      </Button>
+
+      <SignupPopup open={open} onClose={handleClose} onSignup={handleSignup} />
     </Box>
   );
 }
