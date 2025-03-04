@@ -48,6 +48,7 @@ export async function createUserWithWallet(
   return true;
 }
 
+// To-Do: Convert this into an API endpoint for our frontend to hit
 async function main() {
   const newlyCreatedPrivyServerWallet = await createPrivyServerWallet();
   console.log("Newly Created Wallet:", newlyCreatedPrivyServerWallet);
