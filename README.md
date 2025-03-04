@@ -1,5 +1,5 @@
 # Jarvis
-Jarvis is an autonomous AI agent that understands a user's risk level and optimizes yield by managing liquidity pool positions across ZKSync boosted LP Pools and restocking ETH on EigenLayer with P2P. 
+Jarvis is an autonomous AI agent that understands a user's risk level and optimizes yield by managing liquidity pool positions across ZKSync boosted LP Pools and restaking ETH on EigenLayer with P2P. 
 
 # Problem We're Solving 
 Interacting with DeFi protocols is complex and time-consuming (e.g. swapping, bridging, needing to monitor yield rates constantly). Jarvis abstracts this for the end user by directly interacting with the smart contracts of DeFi protocols and monitoring APR rates--all while keeping your unique risk profile in mind. 
