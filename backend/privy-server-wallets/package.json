@@ -19,6 +19,8 @@
   },
   "dependencies": {
     "@privy-io/server-auth": "^1.18.11",
+    "@supabase/supabase-js": "^2.49.1",
+    "dotenv": "^16.4.7",
     "permissionless": "^0.2.35",
     "viem": "^2.23.6"
   }
