@@ -9,19 +9,25 @@ import {
   IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { SignupPopupProps } from "./types";
+import { supabase } from "../../utils/supabaseClient";
 
 export default function SignupPopup({
   open,
   onClose,
-  onSignup,
-}: SignupPopupProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleSignup = () => {
-    onSignup?.(email, password);
-    onClose();
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const handleGoogleSignup = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+      });
+      if (error) throw error;
+      onClose();
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   return (
@@ -43,60 +49,23 @@ export default function SignupPopup({
       </DialogTitle>
 
       <DialogContent>
-        <TextField
-          autoFocus
-          margin="dense"
-          label="Email Address"
-          type="email"
-          fullWidth
-          variant="outlined"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          sx={{
-            mb: 2,
-            "& .MuiOutlinedInput-root": {
-              borderRadius: "8px",
-            },
-            "& .MuiInputLabel-outlined": {
-              px: 1,
-            },
-          }}
-        />
-        <TextField
-          margin="dense"
-          label="Password"
-          type="password"
-          fullWidth
-          variant="outlined"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              borderRadius: "8px",
-            },
-            "& .MuiInputLabel-outlined": {
-              px: 1,
-            },
-          }}
-        />
-      </DialogContent>
-
-      <DialogActions>
         <Button
-          onClick={handleSignup}
+          onClick={handleGoogleSignup}
           variant="contained"
           fullWidth
           sx={{
+            mt: 2,
             borderRadius: "16px",
-            backgroundColor: "black",
+            backgroundColor: "#4285F4",
+            color: "white",
             "&:hover": {
-              backgroundColor: "rgba(0,0,0,0.8)",
+              backgroundColor: "#357ae8",
             },
           }}
         >
-          Sign Up
+          Sign Up with Google
         </Button>
-      </DialogActions>
+      </DialogContent>
     </Dialog>
   );
 }
