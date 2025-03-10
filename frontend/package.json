@@ -13,6 +13,7 @@
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.6",
     "@mui/material": "^6.4.6",
+    "@privy-io/server-auth": "^1.18.12",
     "@reclaimprotocol/js-sdk": "^2.2.1",
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
@@ -22,7 +23,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-qr-code": "^2.0.15",
-    "supabase": "^2.15.8"
+    "supabase": "^2.15.8",
+    "viem": "^2.23.9"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

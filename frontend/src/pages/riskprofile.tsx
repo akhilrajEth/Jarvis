@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -15,10 +15,14 @@ import {
 import QRCode from "react-qr-code";
 import { ReclaimProofRequest } from "@reclaimprotocol/js-sdk/dist/index.js";
 import { supabase } from "../utils/supabaseClient";
+import { useAuth } from "../providers/authprovider";
 import { createHash } from "crypto";
+import createPrivyServerWallet from "../utils/createPrivyServerWallet";
 import Link from "next/link";
 
 export default function RiskProfile() {
+  const { session } = useAuth();
+
   const [requestUrl, setRequestUrl] = useState<string>("");
   const [proofs, setProofs] = useState<any>([]);
   const [loading, setLoading] = useState(false);
@@ -159,6 +163,24 @@ export default function RiskProfile() {
       setError("Failed to save allocation data");
     }
   };
+
+  useEffect(() => {
+    console.log("SESSION IN USE EFFECT:", session);
+
+    const handleCreateWallet = async () => {
+      if (session?.user?.id) {
+        try {
+          const userId = session.user.id;
+          await createPrivyServerWallet(userId);
+          console.log("Privy server wallet created successfully");
+        } catch (error) {
+          console.error("Failed to create Privy server wallet:", error);
+        }
+      }
+    };
+
+    handleCreateWallet();
+  }, [session]);
 
   return (
     <Box

@@ -14,3 +14,9 @@ export type PositionData = {
     token1: string;
   };
 };
+
+export type PrivyServerWallet = {
+  id: string;
+  address: string;
+  chain_type: string;
+};
