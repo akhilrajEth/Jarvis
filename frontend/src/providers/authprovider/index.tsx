@@ -31,7 +31,7 @@ export default function AuthProvider({
     useState(false);
   const router = useRouter();
 
-  // Checks if user has an existing privy server wallet
+  // Function to check if user has a privy server wallet
   const checkPrivyServerWallet = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -45,7 +45,6 @@ export default function AuthProvider({
         return false;
       }
 
-      console.log("PRIVY SERVER WALLET:", data?.privy_server_wallet);
       // Set the state based on whether privy_server_wallet is not null
       setHasExistingPrivyServerWallet(data?.privy_server_wallet !== null);
       return data?.privy_server_wallet !== null;
@@ -60,4 +59,49 @@ export default function AuthProvider({
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
 
-     
+      // If user is signed in, check for privy server wallet
+      if (session?.user?.id) {
+        checkPrivyServerWallet(session.user.id);
+      }
+
+      setIsLoading(false);
+    });
+
+    // Listen for auth state changes
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      async (event, supabaseSession) => {
+        setSession(supabaseSession);
+
+        console.log("Auth Event:", event);
+        console.log("SESSION OBJECT:", supabaseSession);
+
+        if (
+          (event === "SIGNED_UP" || event === "SIGNED_IN") &&
+          supabaseSession
+        ) {
+          console.log("INSIDE IF STATEMENT FOR SIGNED UP OR SIGNED IN");
+          console.log("User ID (UUID):", supabaseSession.user.id);
+
+          // Check for privy server wallet when user signs in
+          await checkPrivyServerWallet(supabaseSession.user.id);
+
+          router.push(event === "SIGNED_UP" ? "/riskprofile" : "/positions");
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [router]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <AuthContext.Provider
+      value={{ session, isLoading, hasExistingPrivyServerWallet }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
