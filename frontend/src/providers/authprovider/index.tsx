@@ -7,6 +7,7 @@ import { supabase } from "../../utils/supabaseClient";
 interface AuthContextType {
   session: any;
   isLoading: boolean;
+  hasExistingPrivyServerWallet: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,45 +27,37 @@ export default function AuthProvider({
 }) {
   const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasExistingPrivyServerWallet, setHasExistingPrivyServerWallet] =
+    useState(false);
   const router = useRouter();
+
+  // Checks if user has an existing privy server wallet
+  const checkPrivyServerWallet = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .select("privy_server_wallet")
+        .eq("id", userId)
+        .single();
+
+      if (error) {
+        console.error("Error checking privy server wallet:", error);
+        return false;
+      }
+
+      console.log("PRIVY SERVER WALLET:", data?.privy_server_wallet);
+      // Set the state based on whether privy_server_wallet is not null
+      setHasExistingPrivyServerWallet(data?.privy_server_wallet !== null);
+      return data?.privy_server_wallet !== null;
+    } catch (err) {
+      console.error("Error in checkPrivyServerWallet:", err);
+      return false;
+    }
+  };
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setIsLoading(false);
-    });
 
-    // Listen for auth state changes
-    const { data: subscription } = supabase.auth.onAuthStateChange(
-      async (event, supabaseSession) => {
-        setSession(supabaseSession);
-
-        console.log("Auth Event:", event);
-        console.log("SESSION OBJECT:", supabaseSession);
-
-        if (
-          (event === "SIGNED_UP" || event === "SIGNED_IN") &&
-          supabaseSession
-        ) {
-          console.log("INSIDE IF STATEMENT FOR SIGNED UP OR SIGNED IN");
-          console.log("User ID (UUID):", supabaseSession.user.id);
-
-          router.push(event === "SIGNED_UP" ? "/riskprofile" : "/positions");
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [router]);
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  return (
-    <AuthContext.Provider value={{ session, isLoading }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+     

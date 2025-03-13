@@ -21,7 +21,7 @@ import createPrivyServerWallet from "../utils/createPrivyServerWallet";
 import Link from "next/link";
 
 export default function RiskProfile() {
-  const { session } = useAuth();
+  const { session, hasExistingPrivyServerWallet } = useAuth();
 
   const [requestUrl, setRequestUrl] = useState<string>("");
   const [proofs, setProofs] = useState<any>([]);
@@ -168,7 +168,8 @@ export default function RiskProfile() {
     console.log("SESSION IN USE EFFECT:", session);
 
     const handleCreateWallet = async () => {
-      if (session?.user?.id) {
+      if (session?.user?.id && !hasExistingPrivyServerWallet) {
+        console.log("ABOUT TO CALL CREATE PRIVY SERVER WALLET ENDPOINT");
         try {
           const userId = session.user.id;
           await createPrivyServerWallet(userId);
@@ -333,13 +334,4 @@ export default function RiskProfile() {
                     backgroundColor: "#333",
                   },
                 }}
-              >
-                Next
-              </Button>
-            </Link>
-          </Stack>
-        )}
-      </Paper>
-    </Box>
-  );
-}
+       
