@@ -18,53 +18,56 @@ export async function getStakedEthPositionData(): Promise<number | null> {
   return data?.[0]?.staked_amount ?? null;
 }
 
-export async function getActivePositionData(): Promise<
-  ActivePositionDetails[]
-> {
+export async function getActivePositionData(
+  userId: string
+): Promise<ActivePositionDetails[]> {
   const supabaseUrl = "https://nibfafwhlabdjvkzpvuv.supabase.co";
   const supabaseKey =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pYmZhZndobGFiZGp2a3pwdnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDQ5MDk3NTUsImV4cCI6MjAyMDQ4NTc1NX0.jWvB1p6VVEgG0sqjjsbL9EXNZpSWZfaAqA3uMCKx5AU";
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  //  Get active positions with opportunity IDs
-  const { data: positionsData, error: positionsError } = await supabase
-    .from("agent_subscription_data")
-    .select("active_positions, opportunity_id")
-    .not("active_positions", "is", null);
+  // Get positions data for the specified user ID
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("positions")
+    .eq("id", userId);
 
-  if (positionsError) throw positionsError;
-  if (!positionsData?.length) return [];
+  if (userError) throw userError;
+  if (!userData?.length) return [];
 
-  // Extract unique opportunity IDs
-  const opportunityIds = positionsData
-    .map((p) => p.opportunity_id)
-    .filter((id): id is string => !!id);
+  // Extract positions array from the user's row
+  const userPositions = userData[0]?.positions || [];
+  if (!userPositions.length) return [];
 
-  // Get opportunity details
+  // Extract unique pool addresses
+  const poolAddresses = userPositions
+    .map((position) => position.pool_address)
+    .filter((address): address is string => !!address);
+
+  // Get opportunity details for matching pool addresses
   const { data: opportunitiesData, error: opportunitiesError } = await supabase
     .from("opportunities")
     .select("id, pool_address, name, tvl, total_apr")
-    .in("id", opportunityIds);
+    .in("pool_address", poolAddresses);
 
   if (opportunitiesError) throw opportunitiesError;
   if (!opportunitiesData?.length) return [];
 
   // Combine data from both queries
-  return positionsData
-    .filter(
-      (position) =>
-        opportunitiesData.some((opp) => opp.id === position.opportunity_id) &&
-        position.active_positions !== null &&
-        position.active_positions.trim() !== ""
+  return userPositions
+    .filter((position) =>
+      opportunitiesData.some(
+        (opp) => opp.pool_address === position.pool_address
+      )
     )
     .map((position) => {
       const opportunity = opportunitiesData.find(
-        (opp) => opp.id === position.opportunity_id
+        (opp) => opp.pool_address === position.pool_address
       )!;
 
       return {
-        active_position_id: position.active_positions!,
+        token_id: position.token_id,
         pool_address: opportunity.pool_address,
         name: opportunity.name,
         tvl: String(opportunity.tvl),

@@ -27,8 +27,11 @@ import {
   LP_TABLE_HEADERS,
   STAKED_ETH_TABLE_HEADERS,
 } from "./constants";
+import { useAuth } from "../providers/authprovider";
 
 const Positions = () => {
+  const { session } = useAuth();
+
   const [positions, setPositions] = useState<PositionWithTokens[]>([]);
   const [stakedEth, setStakedEth] = useState<number | null>(null);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
@@ -69,8 +72,9 @@ const Positions = () => {
       const ethStaked = await getStakedEthPositionData();
       setStakedEth(ethStaked);
 
-      const initialPositions = await getActivePositionData();
+      const initialPositions = await getActivePositionData(session?.user?.id);
 
+      console.log("INITIAL POSITIONS:", initialPositions);
       if (!initialPositions?.length) {
         setIsLoading(false);
         return;
@@ -81,14 +85,14 @@ const Positions = () => {
           // First filter out invalid positions
           .filter(
             (p) =>
-              p.active_position_id &&
-              typeof p.active_position_id === "string" &&
-              p.active_position_id.trim() !== ""
+              p.token_id &&
+              typeof p.token_id === "string" &&
+              p.token_id.trim() !== ""
           )
           // Then process valid positions
           .map(async (position) => {
             let updatedPosition: PositionWithTokens = { ...position };
-            const positionId = position.active_position_id.trim();
+            const positionId = position.token_id.trim();
             const isValidPosition = (position.name || "").toLowerCase();
 
             if (isValidPosition.includes("pancakeswap")) {

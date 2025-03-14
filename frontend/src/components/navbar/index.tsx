@@ -31,6 +31,9 @@ export default function Navbar() {
     if (isAuthenticated) {
       console.log("INSIDE IS AUTHENTICATED PART");
       await supabase.auth.signOut();
+      const { data } = await supabase.auth.getSession();
+      console.log("DATA SESSION:", data.session);
+      setIsAuthenticated(!!data.session);
       router.push("/");
     } else {
       setOpen(true);
@@ -61,6 +64,7 @@ export default function Navbar() {
             >
               {isAuthenticated ? "Sign Out" : "Sign In"}
             </Button>
+            <Typography>{isAuthenticated}</Typography>
           </Box>
         </Toolbar>
       </AppBar>
