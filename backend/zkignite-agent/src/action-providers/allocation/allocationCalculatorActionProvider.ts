@@ -39,25 +39,6 @@ export class AllocationCalculatorActionProvider extends ActionProvider {
     }
   }
 
-  private formatSuccess(records: OpportunityRecord[]): string {
-    return JSON.stringify(
-      {
-        success: true,
-        data: records.map(record => ({
-          protocol: record.protocol,
-          poolAddress: record.poolAddress,
-          active_positions: record.active_positions,
-          apr: parseFloat(record.totalAPR.replace("%", "")),
-          token0: record.token0Address,
-          token1: record.token1Address,
-        })),
-        timestamp: new Date().toISOString(),
-      },
-      null,
-      2,
-    );
-  }
-
   private formatError(error: Error): string {
     return JSON.stringify(
       {

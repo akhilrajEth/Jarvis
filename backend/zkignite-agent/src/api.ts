@@ -76,8 +76,10 @@ async function initializeAgent() {
     // });
 
     const llm = new ChatOpenAI({
-      api_key: process.env.GAIA_API_KEY,
-      base_url: "https://llama70b.gaia.domains/v1",
+      apiKey: process.env.GAIA_API_KEY,
+      configuration: {
+        baseURL: "https://llama70b.gaia.domains/v1",
+      },
     });
 
     const account = privateKeyToAccount((process.env.PRIVATE_KEY || "0x1234") as `0x${string}`);
