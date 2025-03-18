@@ -31,7 +31,7 @@ export default function AuthProvider({
     useState(false);
   const router = useRouter();
 
-  // Function to check if user has a privy server wallet
+  // Checks if user has a privy server wallet
   const checkPrivyServerWallet = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -39,11 +39,6 @@ export default function AuthProvider({
         .select("privy_server_wallet")
         .eq("id", userId)
         .single();
-
-      if (error) {
-        console.error("Error checking privy server wallet:", error);
-        return false;
-      }
 
       // Set the state based on whether privy_server_wallet is not null
       setHasExistingPrivyServerWallet(data?.privy_server_wallet !== null);
@@ -58,11 +53,6 @@ export default function AuthProvider({
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-
-      // If user is signed in, check for privy server wallet
-      if (session?.user?.id) {
-        checkPrivyServerWallet(session.user.id);
-      }
 
       setIsLoading(false);
     });
@@ -83,9 +73,10 @@ export default function AuthProvider({
           console.log("User ID (UUID):", supabaseSession.user.id);
 
           // Check for privy server wallet when user signs in
-          await checkPrivyServerWallet(supabaseSession.user.id);
+          // await checkPrivyServerWallet(supabaseSession.user.id);
 
           router.push(event === "SIGNED_UP" ? "/riskprofile" : "/positions");
+          // router.push("/riskprofile");
         }
       }
     );

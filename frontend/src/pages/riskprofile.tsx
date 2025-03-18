@@ -84,7 +84,6 @@ export default function RiskProfile() {
 
             // NOTE: No wallet context since user-management system not implemented yet, thus:
             insertAllocationData(
-              "Vitalik",
               allocation.score,
               allocation.lp,
               allocation.restakedETH
@@ -127,13 +126,12 @@ export default function RiskProfile() {
   };
 
   const insertAllocationData = async (
-    username: string,
     risk_score: string,
     lp: number,
     restaked_eth: number
   ) => {
     try {
-      const dataString = `${username}${risk_score}${lp}${restaked_eth}`;
+      const dataString = `${risk_score}${lp}${restaked_eth}`;
       const hash = createHash("sha256").update(dataString).digest("hex");
 
       const { data: existingData, error: checkError } = await supabase
@@ -151,10 +149,12 @@ export default function RiskProfile() {
         return;
       }
 
+      const userId = session?.user?.id;
+
       // Insert new data with hash
       const { data, error } = await supabase
-        .from("verified_risk_profile")
-        .insert([{ username, risk_score, lp, restaked_eth, hash }]);
+        .from("verified_risk_profiles")
+        .insert([{ id: userId, risk_score, lp, restaked_eth, hash }]);
 
       if (error) throw error;
       console.log("Data inserted successfully:", data);
