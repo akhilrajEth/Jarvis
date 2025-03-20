@@ -1,5 +1,9 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  PutCommand,
+  QueryCommand,
+} from "@aws-sdk/lib-dynamodb";
 import axios from "axios";
 import dotenv from "dotenv";
 
@@ -111,11 +115,98 @@ async function createPositionEntry() {
   }
 }
 
-async function main() {
-  console.log("Creating a position entry...");
+async function getPositionsByUserId(): Promise<Position[]> {
+  // To-Do: When converting this into a cdp agentkit tool, this will be a parameter
+  const userId = "632bbb2f-14ba-444d-8c41-ab09115005f0";
+  const params = {
+    TableName: "positions",
+    KeyConditionExpression: "#userId = :userId",
+    ExpressionAttributeNames: {
+      "#userId": "userId", // Attribute name for partition key
+    },
+    ExpressionAttributeValues: {
+      ":userId": userId, // Value for the partition key
+    },
+  };
 
   try {
-    await createPositionEntry();
+    const command = new QueryCommand(params);
+    const response = await docClient.send(command);
+
+    console.log("Query Results:", response.Items);
+
+    // Cast response.Items to Position[] or return an empty array if no items are found
+    return (response.Items as Position[]) || [];
+  } catch (error) {
+    console.error("Error fetching positions for user:", error);
+    throw error;
+  }
+}
+
+async function compareAssetPrices(
+  userId: string
+): Promise<{ token0PriceDifference: number; token1PriceDifference: number }[]> {
+  try {
+    // Step 1: Fetch positions for the given user
+    const positions = await getPositionsByUserId();
+
+    // Step 2: Iterate through each position and calculate price differences
+    const priceDifferences = await Promise.all(
+      positions.map(async (position) => {
+        const {
+          token0Address,
+          token1Address,
+          token0InitialPrice,
+          token1InitialPrice,
+        } = position;
+
+        // Step 3: Get current token prices
+        const prices = await getTokenPrices("zksync", [
+          token0Address,
+          token1Address,
+        ]);
+
+        const currentToken0Price = parseFloat(
+          prices[token0Address.toLowerCase()]
+        );
+        const currentToken1Price = parseFloat(
+          prices[token1Address.toLowerCase()]
+        );
+
+        // Step 4: Calculate percent difference for token0
+        const token0PriceDifference =
+          (currentToken0Price - token0InitialPrice) / token0InitialPrice;
+
+        // Step 5: Calculate percent difference for token1
+        const token1PriceDifference =
+          (currentToken1Price - token1InitialPrice) / token1InitialPrice;
+
+        return {
+          token0PriceDifference,
+          token1PriceDifference,
+        };
+      })
+    );
+
+    console.log("Price Differences:", priceDifferences);
+    return priceDifferences;
+  } catch (error) {
+    console.error("Error comparing asset prices:", error);
+    throw error;
+  }
+}
+
+async function main() {
+  try {
+    // console.log("Creating a position entry...");
+    // await createPositionEntry();
+
+    // console.log("Fetching positions for user...");
+    // await getPositionsByUserId();
+
+    console.log("Comparing asset prices...");
+    const userId = "632bbb2f-14ba-444d-8c41-ab09115005f0";
+    await compareAssetPrices(userId);
   } catch (error) {
     console.error("Failed to create position entry:", error);
   }
