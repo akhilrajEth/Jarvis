@@ -144,56 +144,82 @@ async function getPositionsByUserId(): Promise<Position[]> {
 }
 
 async function compareAssetPrices(
-  userId: string
-): Promise<{ token0PriceDifference: number; token1PriceDifference: number }[]> {
+  userId: string,
+  tokenId: string
+): Promise<{
+  token0PriceDifference: number;
+  token1PriceDifference: number;
+} | null> {
   try {
     // Step 1: Fetch positions for the given user
     const positions = await getPositionsByUserId();
 
-    // Step 2: Iterate through each position and calculate price differences
-    const priceDifferences = await Promise.all(
-      positions.map(async (position) => {
-        const {
-          token0Address,
-          token1Address,
-          token0InitialPrice,
-          token1InitialPrice,
-        } = position;
+    // Step 2: Find the position with the matching tokenId
+    const position = positions.find((pos) => pos.tokenId === tokenId);
 
-        // Step 3: Get current token prices
-        const prices = await getTokenPrices("zksync", [
-          token0Address,
-          token1Address,
-        ]);
+    if (!position) {
+      console.log(`No position found with tokenId: ${tokenId}`);
+      return null;
+    }
 
-        const currentToken0Price = parseFloat(
-          prices[token0Address.toLowerCase()]
-        );
-        const currentToken1Price = parseFloat(
-          prices[token1Address.toLowerCase()]
-        );
+    // Step 3: Extract relevant data from the position
+    const {
+      token0Address,
+      token1Address,
+      token0InitialPrice,
+      token1InitialPrice,
+    } = position;
 
-        // Step 4: Calculate percent difference for token0
-        const token0PriceDifference =
-          (currentToken0Price - token0InitialPrice) / token0InitialPrice;
+    // Step 4: Get current token prices
+    const prices = await getTokenPrices("zksync", [
+      token0Address,
+      token1Address,
+    ]);
 
-        // Step 5: Calculate percent difference for token1
-        const token1PriceDifference =
-          (currentToken1Price - token1InitialPrice) / token1InitialPrice;
+    const currentToken0Price = parseFloat(prices[token0Address.toLowerCase()]);
+    const currentToken1Price = parseFloat(prices[token1Address.toLowerCase()]);
 
-        return {
-          token0PriceDifference,
-          token1PriceDifference,
-        };
-      })
-    );
+    // Step 5: Calculate percent difference for token0
+    const token0PriceDifference =
+      (currentToken0Price - token0InitialPrice) / token0InitialPrice;
 
-    console.log("Price Differences:", priceDifferences);
-    return priceDifferences;
+    // Step 6: Calculate percent difference for token1
+    const token1PriceDifference =
+      (currentToken1Price - token1InitialPrice) / token1InitialPrice;
+
+    const result = {
+      token0PriceDifference,
+      token1PriceDifference,
+    };
+
+    console.log("Price Differences:", result);
+    return result;
   } catch (error) {
     console.error("Error comparing asset prices:", error);
     throw error;
   }
+}
+
+async function getPositionRemovalStatus(
+  userId: string,
+  tokenId: string
+): Promise<boolean> {
+  // To-Do: Implement this function
+  const priceDifferences = await compareAssetPrices(userId, tokenId);
+  if (!priceDifferences) {
+    return false;
+  }
+
+  const token0PriceDifference = priceDifferences.token0PriceDifference || 0;
+  const token1PriceDifference = priceDifferences.token1PriceDifference || 0;
+
+  // To-Do: 10% difference hardcoded for now but need to gauge this from risk profile later
+  if (token0PriceDifference > 0.1 || token1PriceDifference > 0.1) {
+    console.log("Position cannot be removed yet");
+    return false;
+  }
+
+  return true;
 }
 
 async function main() {
@@ -204,9 +230,11 @@ async function main() {
     // console.log("Fetching positions for user...");
     // await getPositionsByUserId();
 
-    console.log("Comparing asset prices...");
+    console.log("Getting position removal status...");
     const userId = "632bbb2f-14ba-444d-8c41-ab09115005f0";
-    await compareAssetPrices(userId);
+    const tokenId = "1234";
+    const status = await getPositionRemovalStatus(userId, tokenId);
+    console.log("STATUS:", status);
   } catch (error) {
     console.error("Failed to create position entry:", error);
   }
