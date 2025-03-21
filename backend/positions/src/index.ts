@@ -3,14 +3,23 @@ import {
   DynamoDBDocumentClient,
   PutCommand,
   QueryCommand,
+  DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
+import { createClient } from "@supabase/supabase-js";
 import axios from "axios";
 import dotenv from "dotenv";
 
-// Load environment variables from .env file
 dotenv.config();
 
-// Initialize DynamoDB client
+/**
+ * Initializing db clients
+ */
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
 const client = new DynamoDBClient({
   region: process.env.AWS_REGION!,
   credentials: {
@@ -21,6 +30,11 @@ const client = new DynamoDBClient({
 
 const docClient = DynamoDBDocumentClient.from(client);
 
+/**
+ * Constants and types
+ */
+
+// To-Do: Move this to a separate file when converting this into a cdp agentkit tool
 const BASE_URL = "https://api.geckoterminal.com/api/v2";
 type TokenPricesResponse = Record<string, string>;
 
@@ -33,8 +47,16 @@ interface Position {
   tokenId: string;
   token0InitialPrice: number;
   token1InitialPrice: number;
-  timestamp: string;
 }
+
+interface SupabasePosition {
+  token_id: string;
+  pool_address: string;
+}
+
+/**
+ * DynamoDB helper and main functions
+ */
 
 async function getTokenPrices(
   network: string,
@@ -71,7 +93,7 @@ async function putPosition(position: Position): Promise<void> {
   }
 }
 
-async function createPositionEntry() {
+async function addActivePositionInDynamo() {
   // To-Do: When converting this into a cdp agentkit tool, these will be parameters
   const userId = "632bbb2f-14ba-444d-8c41-ab09115005f0";
   const token0Address = "0x5AEa5775959fBC2557Cc8789bC1bf90A239D9a91";
@@ -93,8 +115,6 @@ async function createPositionEntry() {
     const token0InitialPrice = parseFloat(prices[lowercaseToken0Address]);
     const token1InitialPrice = parseFloat(prices[lowercaseToken1Address]);
 
-    const timestamp = new Date().toISOString();
-
     console.log("TOKEN 0 PRICE:", token0InitialPrice);
     console.log("TOKEN 1 PRICE:", token1InitialPrice);
     const position: Position = {
@@ -106,12 +126,33 @@ async function createPositionEntry() {
       tokenId,
       token0InitialPrice,
       token1InitialPrice,
-      timestamp,
     };
 
     await putPosition(position);
   } catch (error) {
     console.error("Error creating position entry:", error);
+  }
+}
+
+async function deleteActivePositionInDynamo(
+  tokenId: string,
+  userId: string
+): Promise<void> {
+  const params = {
+    TableName: "positions",
+    Key: {
+      userId: userId,
+      tokenId: tokenId,
+    },
+  };
+
+  try {
+    const command = new DeleteCommand(params);
+    await docClient.send(command);
+    console.log("Position deleted successfully with tokenId:", tokenId);
+  } catch (error) {
+    console.error("Error deleting position:", error);
+    throw error;
   }
 }
 
@@ -222,19 +263,164 @@ async function getPositionRemovalStatus(
   return true;
 }
 
+/**
+ * Supabase DB helper and main functions
+ */
+
+async function addActivePositionInSupabase(
+  userId: string,
+  tokenId: string,
+  poolAddress: string
+) {
+  console.log(
+    "Currently adding position to user's positions array in supabase:",
+    tokenId,
+    poolAddress
+  );
+
+  try {
+    console.log("Inside try block...");
+    console.log("USER ID IN PROGRESS:", userId);
+
+    const { data: userData, error: fetchError } = await supabase
+      .from("users")
+      .select("positions")
+      .eq("id", userId);
+
+    console.log("USER DATA:", userData);
+
+    if (fetchError) throw fetchError;
+
+    // Check if user exists
+    if (!userData || userData.length === 0) {
+      throw new Error(`No user found with ID ${userId}`);
+    }
+
+    console.log("Creating new position object rn...");
+
+    const userPositions = userData[0]?.positions || [];
+
+    // Create the new position object
+    const newPosition = {
+      token_id: tokenId,
+      pool_address: poolAddress,
+    };
+
+    // Append the new position to the array
+    const updatedPositions = [...userPositions, newPosition];
+
+    // Update the user's positions array
+    const { data, error } = await supabase
+      .from("users")
+      .update({ positions: updatedPositions })
+      .eq("id", userId)
+      .select();
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      throw new Error(`Failed to update user with ID ${userId}`);
+    }
+
+    console.log("Successfully added position to user's positions array");
+  } catch (error) {
+    console.error("Error adding active position in Supabase:", error);
+    throw error;
+  }
+}
+
+async function removeActivePositionFromSupabase(
+  userId: string,
+  tokenId: string
+) {
+  console.log(
+    "Currently removing position from user's positions array in supabase:",
+    tokenId,
+    poolAddress
+  );
+
+  try {
+    const { data: userData, error: fetchError } = await supabase
+      .from("users")
+      .select("positions")
+      .eq("id", userId);
+
+    if (fetchError) throw fetchError;
+
+    // Check if user exists
+    if (!userData || userData.length === 0) {
+      throw new Error(`No user found with ID ${userId}`);
+    }
+
+    const userPositions = userData[0]?.positions || ([] as SupabasePosition[]);
+
+    // Filter out the position to remove
+    const updatedPositions = userPositions.filter(
+      (position: SupabasePosition) => !(position.token_id === tokenId)
+    );
+
+    // If no positions were removed, throw an error
+    if (updatedPositions.length === userPositions.length) {
+      throw new Error(`Position not found for tokenId ${tokenId}`);
+    }
+
+    // Update the user's positions array
+    const { data, error } = await supabase
+      .from("users")
+      .update({ positions: updatedPositions })
+      .eq("id", userId)
+      .select();
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      throw new Error(`Failed to update user with ID ${userId}`);
+    }
+
+    console.log("Successfully removed position from user's positions array");
+  } catch (error) {
+    console.error("Error removing active position in Supabase:", error);
+    throw error;
+  }
+}
+
+/**
+ * Combined functions that perform actions in both DBs
+ */
+
+// To-Do: Use this in the main agent tool file and export all other helper and main funcs from above to a utils file
+async function addActivePosition(
+  userId: string,
+  tokenId: string,
+  poolAddress: string
+) {
+  await addActivePositionInSupabase(userId, tokenId, poolAddress);
+  await addActivePositionInDynamo();
+}
+
+async function removeActivePosition(userId: string, tokenId: string) {
+  await removeActivePositionFromSupabase(userId, tokenId);
+  await addActivePositionInDynamo();
+}
+
 async function main() {
   try {
     // console.log("Creating a position entry...");
-    // await createPositionEntry();
-
+    // await addActivePositionInDynamo();
     // console.log("Fetching positions for user...");
     // await getPositionsByUserId();
-
-    console.log("Getting position removal status...");
-    const userId = "632bbb2f-14ba-444d-8c41-ab09115005f0";
-    const tokenId = "1234";
-    const status = await getPositionRemovalStatus(userId, tokenId);
-    console.log("STATUS:", status);
+    // console.log("Getting position removal status...");
+    // const userId = "632bbb2f-14ba-444d-8c41-ab09115005f0";
+    // const tokenId = "1234";
+    // const status = await getPositionRemovalStatus(userId, tokenId);
+    // console.log("STATUS:", status);
+    // console.log("Adding active position...");
+    // const userId = "632bbb2f-14ba-444d-8c41-ab09115005f0";
+    // const tokenId = "12345";
+    // const poolAddress = "0x5AEa5775959fBC2557Cc8789bC1bf90A239D9a91";
+    // await addActivePosition(userId, tokenId, poolAddress);
+    // await removeActivePositionFromSupabase(userId, tokenId, poolAddress);
+    // await deleteActivePositionInDynamo(tokenId, userId);
   } catch (error) {
     console.error("Failed to create position entry:", error);
   }

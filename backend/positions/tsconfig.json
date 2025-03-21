@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
     "target": "ES2020",
+    "module": "CommonJS",
     "esModuleInterop": true,
-    "moduleResolution": "node"
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "strict": true
   }
 }
