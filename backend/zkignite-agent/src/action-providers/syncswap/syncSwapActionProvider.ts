@@ -7,7 +7,7 @@ import { CreatePositionSchema, GetTokenIdsSchema, RemoveLiquiditySchema } from "
 
 import { NFPM_ABI, POOL_ABI, NFPM_ADDRESS } from "./constants";
 
-import { approve } from "../utils";
+import { approve, removeActivePositionFromSupabase, deleteActivePositionInDynamo } from "../utils";
 
 import { supabase } from "../supabaseClient";
 
@@ -120,8 +120,9 @@ Important notes:
       txs.push(burnTx);
       const burnReceipt = await wallet.waitForTransactionReceipt(burnTx);
 
-      // 5. Remove position from active positions in db
-      await this.removeActivePosition(args.tokenId);
+      // 5. Remove position from active positions in both supabase and dynamo db
+      await this.removeActivePositionFromSupabase(args.userId, args.tokenId);
+      await this.deleteActivePositionInDynamo(args.userId, args.tokenId);
 
       return JSON.stringify({
         success: true,
@@ -331,40 +332,6 @@ Important notes:
           details: {
             position_id: positionId,
             pool_address: poolAddress,
-          },
-        },
-      });
-    }
-  }
-
-  private async removeActivePosition(tokenId: string): Promise<string> {
-    console.log("Remove active position called with tokenId", tokenId);
-    try {
-      const { data, error } = await supabase
-        .from("agent_subscription_data")
-        .update({ active_positions: null })
-        .eq("active_positions", tokenId)
-        .select();
-
-      if (error) throw error;
-
-      if (!data?.length) {
-        throw new Error(`No active position found with ID ${tokenId}`);
-      }
-
-      return JSON.stringify({
-        success: true,
-        removed_count: data.length,
-        token_id: tokenId,
-      });
-    } catch (error: any) {
-      return JSON.stringify({
-        success: false,
-        error: {
-          message: error.message,
-          type: "POSITION_REMOVAL_ERROR",
-          details: {
-            token_id: tokenId,
           },
         },
       });
