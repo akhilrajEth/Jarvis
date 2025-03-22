@@ -6,6 +6,7 @@ import {
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { createClient } from "@supabase/supabase-js";
+import axios from "axios";
 import { encodeFunctionData } from "viem";
 import { EvmWalletProvider } from "@coinbase/agentkit";
 import dotenv from "dotenv";
@@ -266,7 +267,7 @@ export async function addActivePositionInDynamo(
   const addresses = [token0Address, token1Address];
 
   try {
-    const prices = await getTokenPrices(network, addresses);
+    const prices = await getTokenPrices(addresses);
 
     const token0InitialPrice = parseFloat(prices[lowercaseToken0Address]);
     const token1InitialPrice = parseFloat(prices[lowercaseToken1Address]);
@@ -354,4 +355,97 @@ export async function addActivePositionInSupabase(
     console.error("Error adding active position in Supabase:", error);
     throw error;
   }
+}
+
+/**
+ * Main + helper functions to evaluate whether a position can be removed
+ */
+
+async function getPositionsByUserId(userId: string): Promise<Position[]> {
+  const params = {
+    TableName: "positions",
+    KeyConditionExpression: "#userId = :userId",
+    ExpressionAttributeNames: {
+      "#userId": "userId", // Attribute name for partition key
+    },
+    ExpressionAttributeValues: {
+      ":userId": userId, // Value for the partition key
+    },
+  };
+
+  try {
+    const command = new QueryCommand(params);
+    const response = await docClient.send(command);
+
+    console.log("Query Results:", response.Items);
+
+    return (response.Items as Position[]) || [];
+  } catch (error) {
+    console.error("Error fetching positions for user:", error);
+    throw error;
+  }
+}
+
+async function compareAssetPrices(
+  userId: string,
+  tokenId: string,
+): Promise<{
+  token0PriceDifference: number;
+  token1PriceDifference: number;
+} | null> {
+  try {
+    // Step 1: Fetch positions for the given user
+    const positions = await getPositionsByUserId();
+
+    // Step 2: Find the position with the matching tokenId
+    const position = positions.find(pos => pos.tokenId === tokenId);
+
+    if (!position) {
+      console.log(`No position found with tokenId: ${tokenId}`);
+      return null;
+    }
+
+    // Step 3: Extract relevant data from the position
+    const { token0Address, token1Address, token0InitialPrice, token1InitialPrice } = position;
+
+    // Step 4: Get current token prices
+    const prices = await getTokenPrices([token0Address, token1Address]);
+
+    const currentToken0Price = parseFloat(prices[token0Address.toLowerCase()]);
+    const currentToken1Price = parseFloat(prices[token1Address.toLowerCase()]);
+
+    // Step 5: Calculate percent difference for token0
+    const token0PriceDifference = (currentToken0Price - token0InitialPrice) / token0InitialPrice;
+
+    // Step 6: Calculate percent difference for token1
+    const token1PriceDifference = (currentToken1Price - token1InitialPrice) / token1InitialPrice;
+
+    const result = {
+      token0PriceDifference,
+      token1PriceDifference,
+    };
+
+    return result;
+  } catch (error) {
+    console.error("Error comparing asset prices:", error);
+    throw error;
+  }
+}
+
+export async function getPositionRemovalStatus(userId: string, tokenId: string): Promise<boolean> {
+  const priceDifferences = await compareAssetPrices(userId, tokenId);
+  if (!priceDifferences) {
+    return false;
+  }
+
+  const token0PriceDifference = priceDifferences.token0PriceDifference || 0;
+  const token1PriceDifference = priceDifferences.token1PriceDifference || 0;
+
+  // To-Do: 10% difference hardcoded for now but need to gauge this from risk profile later
+  if (token0PriceDifference > 0.1 || token1PriceDifference > 0.1) {
+    console.log("Position cannot be removed yet");
+    return false;
+  }
+
+  return true;
 }

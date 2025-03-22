@@ -15,6 +15,7 @@ import {
   deleteActivePositionInDynamo,
   addActivePositionInDynamo,
   addActivePositionInSupabase,
+  getPositionRemovalStatus,
 } from "../utils";
 
 import { supabase } from "../supabaseClient";
@@ -52,6 +53,16 @@ Important notes:
     args: z.infer<typeof RemoveLiquiditySchema>,
   ): Promise<string> {
     try {
+      // Check if the position can be removed
+      const removalStatus = await getPositionRemovalStatus(args.tokenId);
+
+      if (!removalStatus) {
+        return JSON.stringify({
+          success: false,
+          message: `Position can't be removed for token ID ${args.tokenId} since one of the assets has decreased in value over the 10% threshold.`,
+        });
+      }
+
       console.log("Currently removing liquidity for panacakeswap pool:", args);
       const tokenId = BigInt(args.tokenId);
       const txs: `0x${string}`[] = [];
