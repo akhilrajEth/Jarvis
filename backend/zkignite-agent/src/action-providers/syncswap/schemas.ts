@@ -17,6 +17,13 @@ export const CreatePositionSchema = z
       .string()
       .regex(/^\d+\.?\d*$|^\.\d+$/, "Must be valid decimal format")
       .describe("The quantity of assets to add to the LP pool, in whole units"),
+    userId: z
+      .string()
+      .regex(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+        "Invalid user id format",
+      )
+      .describe("The user's id in the supabase and dynamo db tables"),
   })
   .describe("Input schema for Syncswap create LP position action");
 

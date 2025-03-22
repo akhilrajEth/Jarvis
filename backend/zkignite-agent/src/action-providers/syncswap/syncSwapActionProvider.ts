@@ -7,7 +7,13 @@ import { CreatePositionSchema, GetTokenIdsSchema, RemoveLiquiditySchema } from "
 
 import { NFPM_ABI, POOL_ABI, NFPM_ADDRESS } from "./constants";
 
-import { approve, removeActivePositionFromSupabase, deleteActivePositionInDynamo } from "../utils";
+import {
+  approve,
+  removeActivePositionFromSupabase,
+  deleteActivePositionInDynamo,
+  addActivePositionInDynamo,
+  addActivePositionInSupabase,
+} from "../utils";
 
 import { supabase } from "../supabaseClient";
 
@@ -246,7 +252,16 @@ Important notes:
       const receipt = await wallet.waitForTransactionReceipt(txHash);
       const tokenId = this.parseTokenIdFromReceipt(receipt);
 
-      await this.addActivePosition(tokenId, args.poolAddress);
+      await addActivePositionInDynamo(
+        args.userId,
+        token0,
+        token1,
+        args.amount0Desired,
+        args.amount1Desired,
+        tokenId,
+      );
+
+      await addActivePositionInSupabase(args.userId, tokenId, args.poolAddress);
 
       return this.formatSuccess(txHash, receipt);
     } catch (error) {
@@ -300,42 +315,6 @@ Important notes:
     }
 
     throw new Error("No NFT tokenId found in transaction logs");
-  }
-
-  private async addActivePosition(positionId: string, poolAddress: string): Promise<string> {
-    console.log("Adding active position to db for syncswap position", positionId, poolAddress);
-    try {
-      const { data, error } = await supabase
-        .from("agent_subscription_data")
-        .update({ active_positions: positionId })
-        .eq("subscription_data->>poolAddress", poolAddress)
-        .select();
-
-      if (error) throw error;
-
-      if (!data?.length) {
-        throw new Error(`No subscription found for pool ${poolAddress}`);
-      }
-
-      return JSON.stringify({
-        success: true,
-        updated_count: data.length,
-        position_id: positionId,
-        pool_address: poolAddress,
-      });
-    } catch (error: any) {
-      return JSON.stringify({
-        success: false,
-        error: {
-          message: error.message,
-          type: "POSITION_UPDATE_ERROR",
-          details: {
-            position_id: positionId,
-            pool_address: poolAddress,
-          },
-        },
-      });
-    }
   }
 
   private formatSuccess(txHash: string, receipt: any): string {

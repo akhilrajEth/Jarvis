@@ -37,6 +37,26 @@ const ERC20_ABI = [
   },
 ];
 
+const BASE_URL = "https://api.geckoterminal.com/api/v2";
+
+type TokenPricesResponse = Record<string, string>;
+
+interface Position {
+  userId: string;
+  token0Address: string;
+  token1Address: string;
+  token0LiquidityAmount: number;
+  token1LiquidityAmount: number;
+  tokenId: string;
+  token0InitialPrice: number;
+  token1InitialPrice: number;
+}
+
+interface SupabasePosition {
+  token_id: string;
+  pool_address: string;
+}
+
 /**
  * Approves a spender to spend tokens on behalf of the owner
  *
@@ -86,6 +106,10 @@ export async function approve(
 export function applyGasMultiplier(gas: bigint, multiplier: number): bigint {
   return BigInt(Math.round(Number(gas) * multiplier));
 }
+
+/**
+ * Functions to remove active positions from supabase and dynamo db
+ */
 
 export async function removeActivePositionFromSupabase(
   userId: string,
@@ -189,5 +213,145 @@ export async function deleteActivePositionInDynamo(
         },
       },
     });
+  }
+}
+
+/**
+ * Main function to add active positions in dynamo db + helper functions
+ */
+
+async function getTokenPrices(addresses: string[]): Promise<TokenPricesResponse> {
+  const network = "zksync";
+  try {
+    const endpoint = `/simple/networks/${network}/token_price/${addresses.join(",")}`;
+    const url = `${BASE_URL}${endpoint}`;
+
+    const response = await axios.get(url);
+
+    console.log("RESPONSE DATA:", response.data.data.attributes.token_prices);
+    return response.data.data.attributes.token_prices;
+  } catch (error) {
+    console.error("Error fetching token prices:", error);
+    throw error;
+  }
+}
+
+async function putPosition(position: Position): Promise<void> {
+  const params = {
+    TableName: "positions",
+    Item: position,
+  };
+
+  try {
+    const command = new PutCommand(params);
+    await docClient.send(command);
+    console.log("Position added successfully:", position);
+  } catch (error) {
+    console.error("Error adding position:", error);
+  }
+}
+
+export async function addActivePositionInDynamo(
+  userId: string,
+  token0Address: string,
+  token1Address: string,
+  token0LiquidityAmount: number,
+  token1LiquidityAmount: number,
+  tokenId: string,
+): Promise<void> {
+  const lowercaseToken0Address = token0Address.toLowerCase();
+  const lowercaseToken1Address = token1Address.toLowerCase();
+
+  const network = "zksync";
+  const addresses = [token0Address, token1Address];
+
+  try {
+    const prices = await getTokenPrices(network, addresses);
+
+    const token0InitialPrice = parseFloat(prices[lowercaseToken0Address]);
+    const token1InitialPrice = parseFloat(prices[lowercaseToken1Address]);
+
+    console.log("TOKEN 0 PRICE:", token0InitialPrice);
+    console.log("TOKEN 1 PRICE:", token1InitialPrice);
+
+    const position: Position = {
+      userId,
+      token0Address,
+      token1Address,
+      token0LiquidityAmount,
+      token1LiquidityAmount,
+      tokenId,
+      token0InitialPrice,
+      token1InitialPrice,
+    };
+
+    await putPosition(position);
+  } catch (error) {
+    console.error("Error creating position entry:", error);
+  }
+}
+
+/**
+ * Main function to add active positions in supabase
+ */
+export async function addActivePositionInSupabase(
+  userId: string,
+  tokenId: string,
+  poolAddress: string,
+): Promise<void> {
+  console.log(
+    "Currently adding position to user's positions array in supabase:",
+    tokenId,
+    poolAddress,
+  );
+
+  try {
+    console.log("Inside try block...");
+    console.log("USER ID IN PROGRESS:", userId);
+
+    const { data: userData, error: fetchError } = await supabase
+      .from("users")
+      .select("positions")
+      .eq("id", userId);
+
+    console.log("USER DATA:", userData);
+
+    if (fetchError) throw fetchError;
+
+    // Check if user exists
+    if (!userData || userData.length === 0) {
+      throw new Error(`No user found with ID ${userId}`);
+    }
+
+    console.log("Creating new position object rn...");
+
+    const userPositions = userData[0]?.positions || [];
+
+    // Create the new position object
+    const newPosition = {
+      token_id: tokenId,
+      pool_address: poolAddress,
+    };
+
+    // Append the new position to the array
+    const updatedPositions = [...userPositions, newPosition];
+
+    // Update the user's positions array
+    const { data, error } = await supabase
+      .from("users")
+      .update({ positions: updatedPositions })
+      .eq("id", userId)
+      .select();
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      throw new Error(`Failed to update user with ID ${userId}`);
+    }
+
+    console.log("Successfully added position to user's positions array");
+  } catch (error) {
+    console.error("Error adding active position in Supabase:", error);
+    throw error;
   }
 }
