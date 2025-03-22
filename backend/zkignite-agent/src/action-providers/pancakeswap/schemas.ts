@@ -40,6 +40,13 @@ export const RemoveLiquiditySchema = z
     tokenId: z
       .string()
       .regex(/^[0-9]+$/, "Token ID must be numeric characters only (e.g. '340250')")
-      .describe("The NFT token ID representing the Pancakeswap liquidity position to remove"),
+      .describe("The NFT token ID representing the Syncswap liquidity position to remove"),
+    userId: z
+      .string()
+      .regex(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+        "Invalid user id format",
+      )
+      .describe("The user's id in the supabase and dynamo db tables"),
   })
   .describe("Input schema for removing liquidity from a Pancakeswap LP position");

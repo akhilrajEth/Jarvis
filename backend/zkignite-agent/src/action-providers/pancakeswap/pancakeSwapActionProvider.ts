@@ -9,7 +9,7 @@ import { CreatePositionSchema, GetTokenIdsSchema, RemoveLiquiditySchema } from "
 
 import { NFPM_ABI, POOL_ABI, NFPM_ADDRESS } from "./constants";
 
-import { approve } from "../utils";
+import { approve, removeActivePositionFromSupabase, deleteActivePositionInDynamo } from "../utils";
 
 import { supabase } from "../supabaseClient";
 
@@ -123,7 +123,8 @@ Important notes:
       const burnReceipt = await wallet.waitForTransactionReceipt(burnTx);
 
       // 5. Remove position from active positions in db
-      await this.removeActivePosition(args.tokenId);
+      await removeActivePositionFromSupabase(args.userId, args.tokenId);
+      await deleteActivePositionInDynamo(args.userId, args.tokenId);
 
       return JSON.stringify({
         success: true,

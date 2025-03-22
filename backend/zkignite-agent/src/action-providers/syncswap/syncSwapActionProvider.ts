@@ -121,8 +121,8 @@ Important notes:
       const burnReceipt = await wallet.waitForTransactionReceipt(burnTx);
 
       // 5. Remove position from active positions in both supabase and dynamo db
-      await this.removeActivePositionFromSupabase(args.userId, args.tokenId);
-      await this.deleteActivePositionInDynamo(args.userId, args.tokenId);
+      await removeActivePositionFromSupabase(args.userId, args.tokenId);
+      await deleteActivePositionInDynamo(args.userId, args.tokenId);
 
       return JSON.stringify({
         success: true,
