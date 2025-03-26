@@ -34,21 +34,22 @@ Retrieves current liquidity pool opportunities from Supabase database
 
       if (error) throw error;
 
-      //CHECK AGENT INGESTED DATA INTEGRITY
-      async function hashData(data: string): Promise<string> {
-        const encoder = new TextEncoder();
-        const dataBuffer = encoder.encode(data);
-        const hashBuffer = await crypto.subtle.digest("SHA-256", dataBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-      }
+      // To-Do: Uncomment data integrity check once we hash the api on the edge functions
+      // // CHECK AGENT INGESTED DATA INTEGRITY
+      // async function hashData(data: string): Promise<string> {
+      //   const encoder = new TextEncoder();
+      //   const dataBuffer = encoder.encode(data);
+      //   const hashBuffer = await crypto.subtle.digest("SHA-256", dataBuffer);
+      //   const hashArray = Array.from(new Uint8Array(hashBuffer));
+      //   return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+      // }
 
-      for (const record of data) {
-        const calculatedHash = await hashData(JSON.stringify(record.subscription_data));
-        if (calculatedHash !== record.subscription_data_hash) {
-          console.error(`Data integrity check failed for opportunity_id: ${record.opportunity_id}`);
-        }
-      }
+      // for (const record of data) {
+      //   const calculatedHash = await hashData(JSON.stringify(record.subscription_data));
+      //   if (calculatedHash !== record.subscription_data_hash) {
+      //     console.error(`Data integrity check failed for opportunity_id: ${record.opportunity_id}`);
+      //   }
+      // }
 
       // Process records and validate that token addresses are in the correct order
       const validatedRecords = await Promise.all(
