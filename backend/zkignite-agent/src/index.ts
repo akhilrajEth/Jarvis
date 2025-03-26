@@ -1,4 +1,4 @@
-import {
+INDEX.ts: import {
   AgentKit,
   walletActionProvider,
   cdpApiActionProvider,
@@ -20,6 +20,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
+import { getWalletIdsForUsers } from "./utils";
 import * as fs from "fs";
 import * as readline from "readline";
 import * as dotenv from "dotenv";
@@ -36,8 +37,12 @@ function validateEnvironment(): void {
   const missingVars: string[] = [];
 
   // Check required variables
-  const requiredVars = ["OPENAI_API_KEY", "CDP_API_KEY_NAME", "CDP_API_KEY_PRIVATE_KEY"];
-  requiredVars.forEach(varName => {
+  const requiredVars = [
+    "OPENAI_API_KEY",
+    "CDP_API_KEY_NAME",
+    "CDP_API_KEY_PRIVATE_KEY",
+  ];
+  requiredVars.forEach((varName) => {
     if (!process.env[varName]) {
       missingVars.push(varName);
     }
@@ -46,7 +51,7 @@ function validateEnvironment(): void {
   // Exit if any required variables are missing
   if (missingVars.length > 0) {
     console.error("Error: Required environment variables are not set");
-    missingVars.forEach(varName => {
+    missingVars.forEach((varName) => {
       console.error(`${varName}=your_${varName.toLowerCase()}_here`);
     });
     process.exit(1);
@@ -60,7 +65,7 @@ validateEnvironment();
  *
  * @returns Agent executor and config
  */
-async function initializeAgent() {
+async function initializeAgent(userId: string, walletId: string) {
   try {
     const llm = new ChatOpenAI({
       apiKey: process.env.GAIA_API_KEY,
@@ -69,17 +74,20 @@ async function initializeAgent() {
       },
     });
 
-    const account = privateKeyToAccount((process.env.PRIVATE_KEY || "0x1234") as `0x${string}`);
+    const account = privateKeyToAccount(
+      (process.env.PRIVATE_KEY || "0x1234") as `0x${string}`
+    );
 
-    // To-Do: walletId be retrieved from supabase db for each user (other new wallet will be created)
     const config: PrivyWalletConfig = {
       appId: process.env.PRIVY_APP_ID!,
       appSecret: process.env.PRIVY_APP_SECRET!,
       chainId: "324", // Note: Defaults to 84532 (base-sepolia)
-      walletId: "ipe0m26gkxwpahf2jsklz0h7",
+      walletId: walletId,
     };
 
-    const walletProvider = await PrivyWalletProvider.configureWithWallet(config);
+    const walletProvider = await PrivyWalletProvider.configureWithWallet(
+      config
+    );
 
     // Initialize AgentKit
     const agentkit = await AgentKit.from({
@@ -96,11 +104,17 @@ async function initializeAgent() {
         allocationCalculatorActionProvider(),
         cdpApiActionProvider({
           apiKeyName: process.env.CDP_API_KEY_NAME,
-          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
+            /\\n/g,
+            "\n"
+          ),
         }),
         cdpWalletActionProvider({
           apiKeyName: process.env.CDP_API_KEY_NAME,
-          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
+            /\\n/g,
+            "\n"
+          ),
         }),
       ],
     });
@@ -109,7 +123,9 @@ async function initializeAgent() {
 
     // Store buffered conversation history in memory
     const memory = new MemorySaver();
-    const agentConfig = { configurable: { thread_id: "CDP AgentKit Chatbot Example!" } };
+    const agentConfig = {
+      configurable: { thread_id: "CDP AgentKit Chatbot Example!" },
+    };
 
     // Create React Agent using the LLM and CDP AgentKit tools
     const agent = createReactAgent({
@@ -127,6 +143,7 @@ async function initializeAgent() {
         "4. The balances you see are in wei so to convert to whole units use the weiToEthConverter tool\n" +
         "5. Before creating an LP position, use the allocation tool to calculate the max percentage to allocate to the balance of each token for the amount0Desired and amount1Desired, which should be in units of eth\n" +
         "6. Execute LP position creation on appropriate DEX with optimal token amounts based the chosen amount0Desired and amount1Desired in units of eth (but don't use the entire balance).\n" +
+        `Whenever you need to call a function that requires a userId to read or write to or from the database, use the userId variable, which is ${userId}.\n` +
         "Once you create an LP position, don't do anything else unless there is a new LP opportunity with a higher APR than the pool your just made a position for.",
     });
 
@@ -153,7 +170,7 @@ async function runChatMode(agent: any, config: any) {
   });
 
   const question = (prompt: string): Promise<string> =>
-    new Promise(resolve => rl.question(prompt, resolve));
+    new Promise((resolve) => rl.question(prompt, resolve));
 
   try {
     // eslint-disable-next-line no-constant-condition
@@ -164,7 +181,10 @@ async function runChatMode(agent: any, config: any) {
         break;
       }
 
-      const stream = await agent.stream({ messages: [new HumanMessage(userInput)] }, config);
+      const stream = await agent.stream(
+        { messages: [new HumanMessage(userInput)] },
+        config
+      );
 
       for await (const chunk of stream) {
         if ("agent" in chunk) {
@@ -190,14 +210,20 @@ async function runChatMode(agent: any, config: any) {
  *
  * @param agent - The agent executor
  * @param config - Agent configuration
- * @param interval - Time interval between actions in seconds
+ * @param maxRuntime - Time limit for agent to complete its tasks
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function runAutonomousMode(agent: any, config: any, interval = 10) {
+async function runAutonomousMode(
+  agent: any,
+  config: any,
+  userId: string,
+  maxRuntime = 24
+) {
   console.log("Starting autonomous mode...");
+  const startTime = Date.now();
 
   // eslint-disable-next-line no-constant-condition
-  while (true) {
+  while (Date.now() - startTime < maxRuntime * 1000) {
     try {
       const thought =
         "You are a helpful agent that can interact onchain using the Coinbase Developer Platform AgentKit. " +
@@ -210,8 +236,12 @@ async function runAutonomousMode(agent: any, config: any, interval = 10) {
         "4. The balances you see are in wei so to convert to whole units use the weiToEthConverter tool\n" +
         "5. Before creating an LP position, use the allocation tool to calculate the max percentage to allocate to the balance of each token for the amount0Desired and amount1Desired, which should be in units of eth\n" +
         "6. Execute LP position creation on appropriate DEX with optimal token amounts based the chosen amount0Desired and amount1Desired in units of eth (but don't use the entire balance).\n" +
+        `Whenever you need to call a function that requires a userId to read or write to or from the database, use the userId variable, which is ${userId}.\n` +
         "Once you create an LP position, don't do anything else unless there is a new LP opportunity with a higher APR than the pool your just made a position for.";
-      const stream = await agent.stream({ messages: [new HumanMessage(thought)] }, config);
+      const stream = await agent.stream(
+        { messages: [new HumanMessage(thought)] },
+        config
+      );
 
       for await (const chunk of stream) {
         if ("agent" in chunk) {
@@ -222,7 +252,11 @@ async function runAutonomousMode(agent: any, config: any, interval = 10) {
         console.log("-------------------");
       }
 
-      await new Promise(resolve => setTimeout(resolve, interval * 1000));
+      if (Date.now() - startTime > (maxRuntime - 5) * 1000) {
+        console.log("Approaching max runtime, ending execution.");
+        break;
+      }
+      console.log(`Autonomous mode completed for user: ${userId}.`);
     } catch (error) {
       if (error instanceof Error) {
         console.error("Error:", error.message);
@@ -244,7 +278,7 @@ async function chooseMode(): Promise<"chat" | "auto"> {
   });
 
   const question = (prompt: string): Promise<string> =>
-    new Promise(resolve => rl.question(prompt, resolve));
+    new Promise((resolve) => rl.question(prompt, resolve));
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
@@ -272,14 +306,26 @@ async function chooseMode(): Promise<"chat" | "auto"> {
  */
 async function main() {
   try {
-    const { agent, config } = await initializeAgent();
-    const mode = await chooseMode();
+    const walletIdMap = await getWalletIdsForUsers();
+    console.log("WALLET ID MAP:", walletIdMap);
+    const userIds = Object.keys(walletIdMap);
 
-    if (mode === "chat") {
-      await runChatMode(agent, config);
-    } else {
-      await runAutonomousMode(agent, config);
+    for (const userId of userIds) {
+      const walletId = walletIdMap[userId];
+      const { agent, config } = await initializeAgent(userId, walletId);
+      await runAutonomousMode(agent, config, userId);
     }
+
+    console.log("Completed running agent for all users.");
+
+    // const { agent, config } = await initializeAgent();
+    // const mode = await chooseMode();
+
+    // if (mode === "chat") {
+    //   await runChatMode(agent, config);
+    // } else {
+    //   await runAutonomousMode(agent, config);
+    // }
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error:", error.message);
@@ -290,7 +336,7 @@ async function main() {
 
 if (require.main === module) {
   console.log("Starting Agent...");
-  main().catch(error => {
+  main().catch((error) => {
     console.error("Fatal error:", error);
     process.exit(1);
   });
