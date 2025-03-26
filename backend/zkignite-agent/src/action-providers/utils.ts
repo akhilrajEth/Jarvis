@@ -10,10 +10,9 @@ import axios from "axios";
 import { encodeFunctionData } from "viem";
 import { EvmWalletProvider } from "@coinbase/agentkit";
 import dotenv from "dotenv";
+import { supabase } from "./supabaseClient";
 
 dotenv.config();
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 const client = new DynamoDBClient({
   region: process.env.AWS_REGION!,
@@ -116,11 +115,7 @@ export async function removeActivePositionFromSupabase(
   userId: string,
   tokenId: string,
 ): Promise<string> {
-  console.log(
-    "Currently removing position from user's positions array in supabase:",
-    tokenId,
-    poolAddress,
-  );
+  console.log("Currently removing position from user's positions array in supabase:", tokenId);
 
   try {
     const { data: userData, error: fetchError } = await supabase
@@ -185,7 +180,7 @@ export async function deleteActivePositionInDynamo(
   userId: string,
   tokenId: string,
 ): Promise<string> {
-  console.log("Currently removing position from dynamo db:", tokenId, poolAddress);
+  console.log("Currently removing position from dynamo db:", tokenId);
   const params = {
     TableName: "positions",
     Key: {
@@ -252,14 +247,18 @@ async function putPosition(position: Position): Promise<void> {
   }
 }
 
+// To-Do: Convert amounts into numbers
 export async function addActivePositionInDynamo(
   userId: string,
   token0Address: string,
   token1Address: string,
-  token0LiquidityAmount: number,
-  token1LiquidityAmount: number,
+  token0LiquidityAmount: string,
+  token1LiquidityAmount: string,
   tokenId: string,
 ): Promise<void> {
+  const token0LiquidityAmountNumber = parseFloat(token0LiquidityAmount);
+  const token1LiquidityAmountNumber = parseFloat(token1LiquidityAmount);
+
   const lowercaseToken0Address = token0Address.toLowerCase();
   const lowercaseToken1Address = token1Address.toLowerCase();
 
@@ -279,8 +278,8 @@ export async function addActivePositionInDynamo(
       userId,
       token0Address,
       token1Address,
-      token0LiquidityAmount,
-      token1LiquidityAmount,
+      token0LiquidityAmount: token0LiquidityAmountNumber,
+      token1LiquidityAmount: token1LiquidityAmountNumber,
       tokenId,
       token0InitialPrice,
       token1InitialPrice,
@@ -395,7 +394,7 @@ async function compareAssetPrices(
 } | null> {
   try {
     // Step 1: Fetch positions for the given user
-    const positions = await getPositionsByUserId();
+    const positions = await getPositionsByUserId(userId);
 
     // Step 2: Find the position with the matching tokenId
     const position = positions.find(pos => pos.tokenId === tokenId);

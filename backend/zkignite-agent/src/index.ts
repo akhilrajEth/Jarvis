@@ -1,18 +1,12 @@
 import {
   AgentKit,
-  CdpWalletProvider,
   walletActionProvider,
   cdpApiActionProvider,
   cdpWalletActionProvider,
-  ViemWalletProvider,
   PrivyWalletProvider,
   PrivyWalletConfig,
 } from "@coinbase/agentkit";
 import { privateKeyToAccount } from "viem/accounts";
-import { zksync } from "viem/chains";
-import { http } from "viem";
-import { createWalletClient } from "viem";
-
 import { swapActionProvider } from "./action-providers/swap/swapActionProvider";
 import { erc20ActionProvider } from "./action-providers/erc20/erc20ActionProvider";
 import { wethActionProvider } from "./action-providers/weth/wethActionProvider";
@@ -29,12 +23,9 @@ import { ChatOpenAI } from "@langchain/openai";
 import * as fs from "fs";
 import * as readline from "readline";
 import * as dotenv from "dotenv";
-import express, { Request, Response } from "express";
-import cors from "cors";
 
 dotenv.config();
-const app = express();
-const port = 3005;
+
 /**
  * Validates that required environment variables are set
  *
@@ -71,11 +62,6 @@ validateEnvironment();
  */
 async function initializeAgent() {
   try {
-    // Initialize LLM
-    // const llm = new ChatOpenAI({
-    //   model: "gpt-4o-mini",
-    // });
-
     const llm = new ChatOpenAI({
       apiKey: process.env.GAIA_API_KEY,
       configuration: {
@@ -85,18 +71,10 @@ async function initializeAgent() {
 
     const account = privateKeyToAccount((process.env.PRIVATE_KEY || "0x1234") as `0x${string}`);
 
-    // const client = createWalletClient({
-    //   account,
-    //   chain: zksync,
-    //   transport: http(),
-    // });
-
-    // const walletProvider = new ViemWalletProvider(client);
-
     // To-Do: walletId be retrieved from supabase db for each user (other new wallet will be created)
     const config: PrivyWalletConfig = {
-      appId: process.env.PRIVY_APP_ID,
-      appSecret: process.env.PRIVY_APP_SECRET,
+      appId: process.env.PRIVY_APP_ID!,
+      appSecret: process.env.PRIVY_APP_SECRET!,
       chainId: "324", // Note: Defaults to 84532 (base-sepolia)
       walletId: "ipe0m26gkxwpahf2jsklz0h7",
     };
@@ -155,7 +133,55 @@ async function initializeAgent() {
     return { agent, config: agentConfig };
   } catch (error) {
     console.error("Failed to initialize agent:", error);
-    throw error; // Re-throw to be handled by caller
+    throw error;
+  }
+}
+
+/**
+ * Run the agent interactively based on user input
+ *
+ * @param agent - The agent executor
+ * @param config - Agent configuration
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function runChatMode(agent: any, config: any) {
+  console.log("Starting chat mode... Type 'exit' to end.");
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  const question = (prompt: string): Promise<string> =>
+    new Promise(resolve => rl.question(prompt, resolve));
+
+  try {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const userInput = await question("\nPrompt: ");
+
+      if (userInput.toLowerCase() === "exit") {
+        break;
+      }
+
+      const stream = await agent.stream({ messages: [new HumanMessage(userInput)] }, config);
+
+      for await (const chunk of stream) {
+        if ("agent" in chunk) {
+          console.log(chunk.agent.messages[0].content);
+        } else if ("tools" in chunk) {
+          console.log(chunk.tools.messages[0].content);
+        }
+        console.log("-------------------");
+      }
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Error:", error.message);
+    }
+    process.exit(1);
+  } finally {
+    rl.close();
   }
 }
 
@@ -207,18 +233,53 @@ async function runAutonomousMode(agent: any, config: any, interval = 10) {
 }
 
 /**
- * Start the agent
+ * Choose whether to run in autonomous or chat mode based on user input
+ *
+ * @returns Selected mode
+ */
+async function chooseMode(): Promise<"chat" | "auto"> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  const question = (prompt: string): Promise<string> =>
+    new Promise(resolve => rl.question(prompt, resolve));
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    console.log("\nAvailable modes:");
+    console.log("1. chat    - Interactive chat mode");
+    console.log("2. auto    - Autonomous action mode");
+
+    const choice = (await question("\nChoose a mode (enter number or name): "))
+      .toLowerCase()
+      .trim();
+
+    if (choice === "1" || choice === "chat") {
+      rl.close();
+      return "chat";
+    } else if (choice === "2" || choice === "auto") {
+      rl.close();
+      return "auto";
+    }
+    console.log("Invalid choice. Please try again.");
+  }
+}
+
+/**
+ * Start the chatbot agent
  */
 async function main() {
   try {
     const { agent, config } = await initializeAgent();
-    // const mode = await chooseMode();
-    // if (mode === "chat") {
-    //   await runChatMode(agent, config);
-    // } else {
-    //   await runAutonomousMode(agent, config);
-    // }
-    await runAutonomousMode(agent, config);
+    const mode = await chooseMode();
+
+    if (mode === "chat") {
+      await runChatMode(agent, config);
+    } else {
+      await runAutonomousMode(agent, config);
+    }
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error:", error.message);
@@ -227,28 +288,10 @@ async function main() {
   }
 }
 
-const corsOptions = {
-  origin: "http://localhost:3000",
-  methods: ["GET", "POST"],
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-
-app.options("/run-agent", cors(corsOptions));
-
-app.get("/run-agent", async (req: Request, res: Response) => {
-  try {
-    console.log("Starting Agent...");
-    res.setHeader("Content-Type", "text/plain");
-    res.send("Agent started successfully");
-    await main();
-  } catch (error) {
+if (require.main === module) {
+  console.log("Starting Agent...");
+  main().catch(error => {
     console.error("Fatal error:", error);
-    res.status(500).send("Error starting agent");
-  }
-});
-
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
+    process.exit(1);
+  });
+}

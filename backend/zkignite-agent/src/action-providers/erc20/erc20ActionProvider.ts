@@ -40,7 +40,7 @@ export class ERC20ActionProvider extends ActionProvider<EvmWalletProvider> {
         address: args.contractAddress as Hex,
         abi,
         functionName: "balanceOf",
-        args: [walletProvider.getAddress()],
+        args: [`0x${walletProvider.getAddress()}`],
       });
 
       return `Balance of ${args.contractAddress} is ${balance}`;

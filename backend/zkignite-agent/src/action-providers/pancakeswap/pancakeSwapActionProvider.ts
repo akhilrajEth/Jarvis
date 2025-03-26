@@ -54,7 +54,7 @@ Important notes:
   ): Promise<string> {
     try {
       // Check if the position can be removed
-      const removalStatus = await getPositionRemovalStatus(args.tokenId);
+      const removalStatus = await getPositionRemovalStatus(args.userId, args.tokenId);
 
       if (!removalStatus) {
         return JSON.stringify({
