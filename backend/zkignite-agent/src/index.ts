@@ -14,7 +14,6 @@ import { opportunitiesActionProvider } from "./action-providers/opportunityDatab
 import { weiToEthConverterActionProvider } from "./action-providers/weiToEthConverter/weiToEthConverterActionProvider";
 import { pancakeSwapActionProvider } from "./action-providers/pancakeswap/pancakeSwapActionProvider";
 import { syncSwapActionProvider } from "./action-providers/syncswap/syncSwapActionProvider";
-import { allocationCalculatorActionProvider } from "./action-providers/allocation/allocationCalculatorActionProvider";
 import { getLangChainTools } from "@coinbase/agentkit-langchain";
 import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
@@ -91,7 +90,6 @@ async function initializeAgent(userId: string, walletId: string) {
         weiToEthConverterActionProvider(),
         pancakeSwapActionProvider(),
         syncSwapActionProvider(),
-        allocationCalculatorActionProvider(),
         cdpApiActionProvider({
           apiKeyName: process.env.CDP_API_KEY_NAME,
           apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
@@ -125,7 +123,6 @@ async function initializeAgent(userId: string, walletId: string) {
         "3. A pool only has two tokens, so retrieve token0 and token1 addresses from the pool with the highest APR\n" +
         "4. Then, check if you have those both required tokens by verifying balances using their addresses\n" +
         "4. The balances you see are in wei so to convert to whole units use the weiToEthConverter tool\n" +
-        "5. Before creating an LP position, use the allocation tool to calculate the max percentage to allocate to the balance of each token for the amount0Desired and amount1Desired, which should be in units of eth\n" +
         "6. Execute LP position creation on appropriate DEX with optimal token amounts based the chosen amount0Desired and amount1Desired in units of eth (but don't use the entire balance).\n" +
         `Whenever you need to call a function that requires a userId to read or write to or from the database, use the userId variable, which is ${userId}.\n` +
         "Once you create an LP position, don't do anything else unless there is a new LP opportunity with a higher APR than the pool your just made a position for.",
@@ -162,7 +159,6 @@ async function runAutonomousMode(agent: any, config: any, userId: string, maxRun
         "3. A pool only has two tokens, so retrieve token0 and token1 addresses from the pool with the highest APR\n" +
         "4. Then, check if you have those both required tokens by verifying balances using their addresses\n" +
         "4. The balances you see are in wei so to convert to whole units use the weiToEthConverter tool\n" +
-        "5. Before creating an LP position, use the allocation tool to calculate the max percentage to allocate to the balance of each token for the amount0Desired and amount1Desired, which should be in units of eth\n" +
         "6. Execute LP position creation on appropriate DEX with optimal token amounts based the chosen amount0Desired and amount1Desired in units of eth (but don't use the entire balance).\n" +
         `Whenever you need to call a function that requires a userId to read or write to or from the database, use the userId variable, which is ${userId}.\n` +
         "Once you create an LP position, don't do anything else unless there is a new LP opportunity with a higher APR than the pool your just made a position for.";

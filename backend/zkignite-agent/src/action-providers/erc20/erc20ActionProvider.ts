@@ -43,6 +43,7 @@ export class ERC20ActionProvider extends ActionProvider<EvmWalletProvider> {
         args: [`0x${walletProvider.getAddress()}`],
       });
 
+      console.log(`Balance of ${args.contractAddress} is ${balance}`);
       return `Balance of ${args.contractAddress} is ${balance}`;
     } catch (error) {
       return `Error getting balance: ${error}`;
@@ -88,6 +89,9 @@ Important notes:
 
       await walletProvider.waitForTransactionReceipt(hash);
 
+      console.log(
+        `Transferred ${args.amount} of ${args.contractAddress} to ${args.destination}.\nTransaction hash for the transfer: ${hash}`,
+      );
       return `Transferred ${args.amount} of ${args.contractAddress} to ${args.destination}.\nTransaction hash for the transfer: ${hash}`;
     } catch (error) {
       return `Error transferring the asset: ${error}`;

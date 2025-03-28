@@ -91,38 +91,48 @@ Retrieves current liquidity pool opportunities from Supabase database
     }
   }
 
+  private logData(type: "INFO" | "ERROR" | "DEBUG", message: string, data?: any) {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      type,
+      message,
+      ...(data && { data }),
+    };
+    console.log(JSON.stringify(logEntry, null, 2));
+  }
+
   private formatSuccess(records: OpportunityRecord[]): string {
-    return JSON.stringify(
-      {
-        success: true,
-        data: records.map(record => ({
-          protocol: record.protocol,
-          poolAddress: record.poolAddress,
-          active_positions: record.active_positions,
-          apr: parseFloat(record.totalAPR.replace("%", "")),
-          token0: record.token0Address,
-          token1: record.token1Address,
-        })),
-        timestamp: new Date().toISOString(),
-      },
-      null,
-      2,
-    );
+    const successResponse = {
+      success: true,
+      data: records.map(record => ({
+        protocol: record.protocol,
+        poolAddress: record.poolAddress,
+        active_positions: record.active_positions,
+        apr: parseFloat(record.totalAPR.replace("%", "")),
+        token0: record.token0Address,
+        token1: record.token1Address,
+      })),
+      timestamp: new Date().toISOString(),
+    };
+
+    logData("INFO", "Successfully fetched opportunities", successResponse);
+
+    return JSON.stringify(successResponse, null, 2);
   }
 
   private formatError(error: Error): string {
-    return JSON.stringify(
-      {
-        success: false,
-        error: {
-          message: error.message,
-          type: "OPPORTUNITIES_FETCH_ERROR",
-          details: [],
-        },
+    const errorResponse = {
+      success: false,
+      error: {
+        message: error.message,
+        type: "OPPORTUNITIES_FETCH_ERROR",
+        details: [],
       },
-      null,
-      2,
-    );
+    };
+
+    logData("ERROR", "Error occurred while fetching opportunities", errorResponse);
+
+    return JSON.stringify(errorResponse, null, 2);
   }
 
   private async getPoolTokens(poolAddress: string) {
