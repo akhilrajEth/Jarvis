@@ -1,4 +1,4 @@
-INDEX.ts: import {
+import {
   AgentKit,
   walletActionProvider,
   cdpApiActionProvider,
@@ -37,12 +37,8 @@ function validateEnvironment(): void {
   const missingVars: string[] = [];
 
   // Check required variables
-  const requiredVars = [
-    "OPENAI_API_KEY",
-    "CDP_API_KEY_NAME",
-    "CDP_API_KEY_PRIVATE_KEY",
-  ];
-  requiredVars.forEach((varName) => {
+  const requiredVars = ["OPENAI_API_KEY", "CDP_API_KEY_NAME", "CDP_API_KEY_PRIVATE_KEY"];
+  requiredVars.forEach(varName => {
     if (!process.env[varName]) {
       missingVars.push(varName);
     }
@@ -51,13 +47,12 @@ function validateEnvironment(): void {
   // Exit if any required variables are missing
   if (missingVars.length > 0) {
     console.error("Error: Required environment variables are not set");
-    missingVars.forEach((varName) => {
+    missingVars.forEach(varName => {
       console.error(`${varName}=your_${varName.toLowerCase()}_here`);
     });
     process.exit(1);
   }
 }
-
 
 /**
  * Initialize the agent with CDP Agentkit
@@ -73,20 +68,16 @@ async function initializeAgent(userId: string, walletId: string) {
       },
     });
 
-    const account = privateKeyToAccount(
-      (process.env.PRIVATE_KEY || "0x1234") as `0x${string}`
-    );
+    const account = privateKeyToAccount((process.env.PRIVATE_KEY || "0x1234") as `0x${string}`);
 
     const config: PrivyWalletConfig = {
-      appId: process.env.PRIVY_APP_ID!,
-      appSecret: process.env.PRIVY_APP_SECRET!,
+      appId: process.env.PRIVY_APP_ID ?? "",
+      appSecret: process.env.PRIVY_APP_SECRET ?? "",
       chainId: "324", // Note: Defaults to 84532 (base-sepolia)
       walletId: walletId,
     };
 
-    const walletProvider = await PrivyWalletProvider.configureWithWallet(
-      config
-    );
+    const walletProvider = await PrivyWalletProvider.configureWithWallet(config);
 
     // Initialize AgentKit
     const agentkit = await AgentKit.from({
@@ -103,17 +94,11 @@ async function initializeAgent(userId: string, walletId: string) {
         allocationCalculatorActionProvider(),
         cdpApiActionProvider({
           apiKeyName: process.env.CDP_API_KEY_NAME,
-          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
-            /\\n/g,
-            "\n"
-          ),
+          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
         }),
         cdpWalletActionProvider({
           apiKeyName: process.env.CDP_API_KEY_NAME,
-          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(
-            /\\n/g,
-            "\n"
-          ),
+          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
         }),
       ],
     });
@@ -153,7 +138,6 @@ async function initializeAgent(userId: string, walletId: string) {
   }
 }
 
-
 /**
  * Run the agent autonomously with specified intervals
  *
@@ -162,12 +146,7 @@ async function initializeAgent(userId: string, walletId: string) {
  * @param maxRuntime - Time limit for agent to complete its tasks
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function runAutonomousMode(
-  agent: any,
-  config: any,
-  userId: string,
-  maxRuntime = 24
-) {
+async function runAutonomousMode(agent: any, config: any, userId: string, maxRuntime = 24) {
   console.log("Starting autonomous mode...");
   const startTime = Date.now();
 
@@ -187,10 +166,7 @@ async function runAutonomousMode(
         "6. Execute LP position creation on appropriate DEX with optimal token amounts based the chosen amount0Desired and amount1Desired in units of eth (but don't use the entire balance).\n" +
         `Whenever you need to call a function that requires a userId to read or write to or from the database, use the userId variable, which is ${userId}.\n` +
         "Once you create an LP position, don't do anything else unless there is a new LP opportunity with a higher APR than the pool your just made a position for.";
-      const stream = await agent.stream(
-        { messages: [new HumanMessage(thought)] },
-        config
-      );
+      const stream = await agent.stream({ messages: [new HumanMessage(thought)] }, config);
 
       for await (const chunk of stream) {
         if ("agent" in chunk) {
@@ -215,13 +191,12 @@ async function runAutonomousMode(
   }
 }
 
-
 /**
  * Start the chatbot agent
  */
 export async function handler(event: any): Promise<any> {
   try {
-    validateEnvironment(); 
+    validateEnvironment();
     const walletIdMap = await getWalletIdsForUsers();
     console.log("WALLET ID MAP:", walletIdMap);
     const userIds = Object.keys(walletIdMap);
@@ -239,12 +214,11 @@ export async function handler(event: any): Promise<any> {
       statusCode: 200,
       body: JSON.stringify({ message: "Agent execution completed successfully." }),
     };
-
   } catch (error) {
     console.error("Error:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
+      body: JSON.stringify({ error: (error as Error).message }),
     };
   }
 }
