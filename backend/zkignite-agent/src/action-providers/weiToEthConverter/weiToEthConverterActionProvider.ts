@@ -36,8 +36,10 @@ export class WeiToEthConverterActionProvider extends ActionProvider<EvmWalletPro
 
       const ethValue = formatEther(args.weiAmount);
 
+      console.log("Converted value:", ethValue);
       return ethValue;
     } catch (error) {
+      console.log("Error during conversion:", error);
       return `Conversion failed: ${error instanceof Error ? error.message : "Unknown error"}`;
     }
   }

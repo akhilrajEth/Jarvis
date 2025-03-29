@@ -58,8 +58,10 @@ Important notes:
 
       await walletProvider.waitForTransactionReceipt(hash);
 
+      console.log(`Wrapped ETH with transaction hash: ${hash}`);
       return `Wrapped ETH with transaction hash: ${hash}`;
     } catch (error) {
+      console.error("Error wrapping ETH:", error);
       return `Error wrapping ETH: ${error}`;
     }
   }

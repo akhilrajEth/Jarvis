@@ -95,6 +95,20 @@ Important notes:
   }
 
   private formatSuccess(txHash: string, receipt: any): string {
+    console.log(
+      JSON.stringify(
+        {
+          success: true,
+          txHash,
+          blockNumber: receipt.blockNumber.toString(),
+          gasUsed: receipt.gasUsed.toString(),
+          network: "ZKSync",
+        },
+        null,
+        2,
+      ),
+    );
+
     return JSON.stringify(
       {
         success: true,
@@ -128,6 +142,8 @@ Important notes:
         requestId: resData?.requestId || "N/A",
       };
     }
+
+    console.log(JSON.stringify(errorDetails, null, 2));
 
     return JSON.stringify(errorDetails, null, 2);
   }

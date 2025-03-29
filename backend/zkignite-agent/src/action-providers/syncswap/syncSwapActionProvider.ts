@@ -141,6 +141,15 @@ Important notes:
       await removeActivePositionFromSupabase(args.userId, args.tokenId);
       await deleteActivePositionInDynamo(args.userId, args.tokenId);
 
+      console.log(
+        JSON.stringify({
+          success: true,
+          message: `Removed liquidity from position ${tokenId}`,
+          transactions: txs,
+          burnedBlock: burnReceipt.blockNumber.toString(),
+        }),
+      );
+
       return JSON.stringify({
         success: true,
         message: `Removed liquidity from position ${tokenId}`,
@@ -182,6 +191,18 @@ Returns:
       const tokenIds = events
         .filter((e): e is ethers.EventLog => e instanceof ethers.EventLog)
         .map(event => event.args.tokenId.toString());
+
+      console.log(
+        JSON.stringify(
+          {
+            success: true,
+            tokenIds,
+            contractAddress: NFPM_ADDRESS,
+          },
+          null,
+          2,
+        ),
+      );
 
       return JSON.stringify(
         {
@@ -329,6 +350,22 @@ Important notes:
   }
 
   private formatSuccess(txHash: string, receipt: any): string {
+    console.log(
+      JSON.stringify(
+        {
+          success: true,
+          txHash,
+          blockNumber: receipt.blockNumber.toString(),
+          positionNFT: {
+            contract: receipt.to,
+            tokenId: receipt.logs?.[0]?.topics?.[2]?.toString(),
+          },
+        },
+        null,
+        2,
+      ),
+    );
+
     return JSON.stringify(
       {
         success: true,
@@ -346,6 +383,18 @@ Important notes:
 
   private formatError(error: unknown): string {
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+
+    console.log(
+      JSON.stringify(
+        {
+          success: false,
+          error: errorMessage.replace(/\[(BigInt:\d+)\]/g, '"$1"'),
+        },
+        null,
+        2,
+      ),
+    );
+
     return JSON.stringify(
       {
         success: false,

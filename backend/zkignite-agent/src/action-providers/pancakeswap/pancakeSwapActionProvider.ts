@@ -57,6 +57,9 @@ Important notes:
       const removalStatus = await getPositionRemovalStatus(args.userId, args.tokenId);
 
       if (!removalStatus) {
+        console.log(
+          `Position can't be removed for token ID ${args.tokenId} since one of the assets has decreased in value over the 10% threshold.`,
+        );
         return JSON.stringify({
           success: false,
           message: `Position can't be removed for token ID ${args.tokenId} since one of the assets has decreased in value over the 10% threshold.`,
@@ -143,6 +146,15 @@ Important notes:
       await removeActivePositionFromSupabase(args.userId, args.tokenId);
       await deleteActivePositionInDynamo(args.userId, args.tokenId);
 
+      console.log(
+        JSON.stringify({
+          success: true,
+          message: `Removed liquidity from position ${tokenId}`,
+          transactions: txs,
+          burnedBlock: burnReceipt.blockNumber.toString(),
+        }),
+      );
+
       return JSON.stringify({
         success: true,
         message: `Removed liquidity from position ${tokenId}`,
@@ -187,6 +199,7 @@ Returns:
         .map(event => event.args.tokenId.toString());
 
       console.log("TOKEN IDS", tokenIds);
+
       return JSON.stringify(
         {
           success: true,
@@ -363,14 +376,29 @@ Important notes:
   }
 
   private formatSuccess(txHash: string, receipt: any): string {
+    console.log(
+      JSON.stringify(
+        {
+          success: true,
+          txHash,
+          blockNumber: receipt.blockNumber.toString(),
+          positionNFT: {
+            contract: receipt.to,
+            tokenId: receipt.logs?.[0]?.topics?.[2]?.toString(),
+          },
+        },
+        null,
+        2,
+      ),
+    );
     return JSON.stringify(
       {
         success: true,
         txHash,
-        blockNumber: receipt.blockNumber.toString(), // Convert to string
+        blockNumber: receipt.blockNumber.toString(),
         positionNFT: {
           contract: receipt.to,
-          tokenId: receipt.logs?.[0]?.topics?.[2]?.toString(), // Convert to string
+          tokenId: receipt.logs?.[0]?.topics?.[2]?.toString(),
         },
       },
       null,
@@ -380,10 +408,22 @@ Important notes:
 
   private formatError(error: unknown): string {
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+
+    console.log(
+      JSON.stringify(
+        {
+          success: false,
+          error: errorMessage.replace(/\[(BigInt:\d+)\]/g, '"$1"'),
+        },
+        null,
+        2,
+      ),
+    );
+
     return JSON.stringify(
       {
         success: false,
-        error: errorMessage.replace(/\[(BigInt:\d+)\]/g, '"$1"'), // Sanitize BigInt in errors
+        error: errorMessage.replace(/\[(BigInt:\d+)\]/g, '"$1"'),
       },
       null,
       2,
