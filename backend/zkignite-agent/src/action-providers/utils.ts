@@ -43,6 +43,7 @@ type TokenPricesResponse = Record<string, string>;
 
 interface Position {
   userId: string;
+  poolAddress: string;
   token0Address: string;
   token1Address: string;
   token0LiquidityAmount: number;
@@ -250,6 +251,7 @@ async function putPosition(position: Position): Promise<void> {
 // To-Do: Convert amounts into numbers
 export async function addActivePositionInDynamo(
   userId: string,
+  poolAddress: string,
   token0Address: string,
   token1Address: string,
   token0LiquidityAmount: string,
@@ -276,6 +278,7 @@ export async function addActivePositionInDynamo(
 
     const position: Position = {
       userId,
+      poolAddress,
       token0Address,
       token1Address,
       token0LiquidityAmount: token0LiquidityAmountNumber,
@@ -360,7 +363,7 @@ export async function addActivePositionInSupabase(
  * Main + helper functions to evaluate whether a position can be removed
  */
 
-async function getPositionsByUserId(userId: string): Promise<Position[]> {
+export async function getPositionsByUserId(userId: string): Promise<Position[]> {
   const params = {
     TableName: "positions",
     KeyConditionExpression: "#userId = :userId",
