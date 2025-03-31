@@ -115,7 +115,7 @@ Retrieves current liquidity pool opportunities from Supabase database
       timestamp: new Date().toISOString(),
     };
 
-    logData("INFO", "Successfully fetched opportunities", successResponse);
+    this.logData("INFO", "Successfully fetched opportunities", successResponse);
 
     return JSON.stringify(successResponse, null, 2);
   }
@@ -130,7 +130,7 @@ Retrieves current liquidity pool opportunities from Supabase database
       },
     };
 
-    logData("ERROR", "Error occurred while fetching opportunities", errorResponse);
+    this.logData("ERROR", "Error occurred while fetching opportunities", errorResponse);
 
     return JSON.stringify(errorResponse, null, 2);
   }

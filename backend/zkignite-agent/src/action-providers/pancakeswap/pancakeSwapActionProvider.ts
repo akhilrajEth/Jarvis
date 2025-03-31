@@ -280,6 +280,7 @@ Important notes:
 
       await addActivePositionInDynamo(
         args.userId,
+        args.poolAddress,
         token0,
         token1,
         args.amount0Desired,
