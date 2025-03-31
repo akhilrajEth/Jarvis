@@ -48,11 +48,15 @@ function validateEnvironment(): void {
 
 async function initializeAgent(userId: string, walletId: string) {
   try {
+    // const llm = new ChatOpenAI({
+    //   apiKey: process.env.GAIA_API_KEY,
+    //   configuration: {
+    //     baseURL: "https://llama70b.gaia.domains/v1",
+    //   },
+    // });
+
     const llm = new ChatOpenAI({
-      apiKey: process.env.GAIA_API_KEY,
-      configuration: {
-        baseURL: "https://llama70b.gaia.domains/v1",
-      },
+      model: "gpt-4o-mini",
     });
 
     const account = privateKeyToAccount((process.env.PRIVATE_KEY || "0x1234") as `0x${string}`);
@@ -101,7 +105,7 @@ async function initializeAgent(userId: string, walletId: string) {
       tools,
       checkpointSaver: memory,
       messageModifier:
-        "You are a helpful agent that can interact onchain using the Coinbase Developer Platform AgentKit. " +
+        "You are a helpful autonomous agent that can interact onchain using the Coinbase Developer Platform AgentKit. " +
         "You are empowered to interact onchain using your tools. Your wallet is on ZKSync (chainId: 324) " +
         "and you will have some initial wallet balance. " +
         `1. Check if the user has any active positions using the userPositionsActionProvider. The userId ${userId} should be passed as a parameter.\n` +
@@ -140,7 +144,27 @@ async function runAutonomousMode(agent: any, config: any, userId: string, maxRun
 
   while (Date.now() - startTime < maxRuntime * 1000) {
     try {
-      const thought = `You are a helpful agent interacting on-chain...`;
+      const thought =
+        "You are a helpful autonomous agent that can interact onchain using the Coinbase Developer Platform AgentKit. " +
+        "You are empowered to interact onchain using your tools. Your wallet is on ZKSync (chainId: 324) " +
+        "and you will have some initial wallet balance. " +
+        `1. Check if the user has any active positions using the userPositionsActionProvider. The userId ${userId} should be passed as a parameter.\n` +
+        "2. If the user does not have any active positions, proceed with the steps to create a new position:\n" +
+        "   - Request to view LP position opportunities for Pancakeswap and Syncswap\n" +
+        "   - Compare APRs across all available pools from Pancakeswap and Syncswap, and identify the LP pool with the highest APR\n" +
+        "   - Retrieve the addresses of token0 and token1 from the pool with the highest APR (each pool contains exactly two tokens)\n" +
+        "   - Verify your wallet balances for token0 and token1 using their respective addresses\n" +
+        "   - Convert balances from wei to ETH units using the weiToEthConverter tool\n" +
+        "   - If you lack sufficient amounts of token0 or token1, use the swap tool to acquire them:\n" +
+        "     - Call the swap tool once to swap for token0\n" +
+        "     - Call the swap tool again to swap for token1\n" +
+        "   - Execute LP position creation on the appropriate DEX using optimal token amounts based on amount0Desired and amount1Desired in ETH units (ensure you do not use your entire wallet balance)\n" +
+        "3. If the user does have an active position, check if the poolAddress of that position matches the pool with the highest APR:\n" +
+        "   - If it matches, do nothing.\n" +
+        "   - If it does not match, call either the Syncswap or Pancakeswap tool to invoke the removeLiquidity function.\n" +
+        "   - Then follow all steps from part two to create a new position for the pool with the highest APR.\n" +
+        `Whenever you need to call a function that requires a userId to read or write to or from the database, use the userId variable, which is ${userId}.\n` +
+        "After creating an LP position, remain idle unless a new LP opportunity arises with a higher APR than your current pool.";
 
       const stream = await agent.stream({ messages: [new HumanMessage(thought)] }, config);
 
