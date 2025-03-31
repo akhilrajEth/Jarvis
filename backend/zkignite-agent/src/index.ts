@@ -120,14 +120,23 @@ async function initializeAgent(userId: string, walletId: string) {
         "You are a helpful agent that can interact onchain using the Coinbase Developer Platform AgentKit. " +
         "You are empowered to interact onchain using your tools. Your wallet is on ZKSync (chainId: 324) " +
         "and you will have some initial wallet balance. " +
-        "1. Request to view LP position opportunities for Pancakeswap and Syncswap\n" +
-        "2. Identify one LP pool with the highest APR across both Pancakeswap and Syncswap pools\n" +
-        "3. A pool only has two tokens, so retrieve token0 and token1 addresses from the pool with the highest APR\n" +
-        "4. Then, check if you have those both required tokens by verifying balances using their addresses\n" +
-        "4. The balances you see are in wei so to convert to whole units use the weiToEthConverter tool\n" +
-        "6. Execute LP position creation on appropriate DEX with optimal token amounts based the chosen amount0Desired and amount1Desired in units of eth (but don't use the entire balance).\n" +
+        `1. Check if the user has any active positions using the userPositionsActionProvider. The userId ${userId} should be passed as a parameter.\n` +
+        "2. If the user does not have any active positions, proceed with the steps to create a new position:\n" +
+        "   - Request to view LP position opportunities for Pancakeswap and Syncswap\n" +
+        "   - Compare APRs across all available pools from Pancakeswap and Syncswap, and identify the LP pool with the highest APR\n" +
+        "   - Retrieve the addresses of token0 and token1 from the pool with the highest APR (each pool contains exactly two tokens)\n" +
+        "   - Verify your wallet balances for token0 and token1 using their respective addresses\n" +
+        "   - Convert balances from wei to ETH units using the weiToEthConverter tool\n" +
+        "   - If you lack sufficient amounts of token0 or token1, use the swap tool to acquire them:\n" +
+        "     - Call the swap tool once to swap for token0\n" +
+        "     - Call the swap tool again to swap for token1\n" +
+        "   - Execute LP position creation on the appropriate DEX using optimal token amounts based on amount0Desired and amount1Desired in ETH units (ensure you do not use your entire wallet balance)\n" +
+        "3. If the user does have an active position, check if the poolAddress of that position matches the pool with the highest APR:\n" +
+        "   - If it matches, do nothing.\n" +
+        "   - If it does not match, call either the Syncswap or Pancakeswap tool to invoke the removeLiquidity function.\n" +
+        "   - Then follow all steps from part two to create a new position for the pool with the highest APR.\n" +
         `Whenever you need to call a function that requires a userId to read or write to or from the database, use the userId variable, which is ${userId}.\n` +
-        "Once you create an LP position, don't do anything else unless there is a new LP opportunity with a higher APR than the pool your just made a position for.",
+        "After creating an LP position, remain idle unless a new LP opportunity arises with a higher APR than your current pool.",
     });
 
     return { agent, config: agentConfig };
@@ -156,7 +165,7 @@ async function runAutonomousMode(agent: any, config: any, userId: string, maxRun
         "You are a helpful agent that can interact onchain using the Coinbase Developer Platform AgentKit. " +
         "You are empowered to interact onchain using your tools. Your wallet is on ZKSync (chainId: 324) " +
         "and you will have some initial wallet balance. " +
-        `1. Before querying the LP position opportunities for Pancakeswap and Syncswap, check if the user has any active positions using the userPositionsActionProvider. The userId ${userId} should be passed as a parameter.\n` +
+        `1. Check if the user has any active positions using the userPositionsActionProvider. The userId ${userId} should be passed as a parameter.\n` +
         "2. If the user does not have any active positions, proceed with the steps to create a new position:\n" +
         "   - Request to view LP position opportunities for Pancakeswap and Syncswap\n" +
         "   - Compare APRs across all available pools from Pancakeswap and Syncswap, and identify the LP pool with the highest APR\n" +
