@@ -111,7 +111,7 @@ async function initializeAgent(userId: string, walletId: string) {
         `1. Check if the user has any active positions using the userPositionsActionProvider. The userId ${userId} should be passed as a parameter.\n` +
         "2. If the user does not have any active positions, proceed with the steps to create a new position:\n" +
         "   - Request to view LP position opportunities for Pancakeswap and Syncswap\n" +
-        "   - Compare APRs across all available pools from Pancakeswap and Syncswap, and identify the LP pool with the highest APR\n" +
+        "   - Find the LP pool with the highest APR across all available pools from Pancakeswap and Syncswap\n" +
         "   - Retrieve the addresses of token0 and token1 from the pool with the highest APR (each pool contains exactly two tokens)\n" +
         "   - Verify your wallet balances for token0 and token1 using their respective addresses\n" +
         "   - Convert balances from wei to ETH units using the weiToEthConverter tool\n" +
@@ -151,7 +151,7 @@ async function runAutonomousMode(agent: any, config: any, userId: string, maxRun
         `1. Check if the user has any active positions using the userPositionsActionProvider. The userId ${userId} should be passed as a parameter.\n` +
         "2. If the user does not have any active positions, proceed with the steps to create a new position:\n" +
         "   - Request to view LP position opportunities for Pancakeswap and Syncswap\n" +
-        "   - Compare APRs across all available pools from Pancakeswap and Syncswap, and identify the LP pool with the highest APR\n" +
+        "   - Find the LP pool with the highest APR across all available pools from Pancakeswap and Syncswap\n" +
         "   - Retrieve the addresses of token0 and token1 from the pool with the highest APR (each pool contains exactly two tokens)\n" +
         "   - Verify your wallet balances for token0 and token1 using their respective addresses\n" +
         "   - Convert balances from wei to ETH units using the weiToEthConverter tool\n" +
@@ -169,7 +169,12 @@ async function runAutonomousMode(agent: any, config: any, userId: string, maxRun
       const stream = await agent.stream({ messages: [new HumanMessage(thought)] }, config);
 
       for await (const chunk of stream) {
-        console.log(chunk);
+        if ("agent" in chunk) {
+          console.log(chunk.agent.messages[0].content);
+        } else if ("tools" in chunk) {
+          console.log(chunk.tools.messages[0].content);
+        }
+        console.log("-------------------");
       }
 
       console.log(`Autonomous mode completed for user ID ${userId}.`);
