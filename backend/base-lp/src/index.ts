@@ -1,5 +1,11 @@
 import axios from "axios";
+import { createClient } from "@supabase/supabase-js";
 import { Pool, UniswapV3PoolData, UniswapV3SubgraphResponse } from "./types";
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 async function getUniswapV3Pools(): Promise<UniswapV3PoolData[]> {
   const API_KEY = "5db37e23ce820eb4087f65bc3d79438c";
@@ -87,6 +93,25 @@ async function calculateAPRs(): Promise<Pool[]> {
   return poolsWithAPRs;
 }
 
+async function savePoolsToSupabase(pools: Pool[]): Promise<void> {
+  try {
+    for (const pool of pools) {
+      const { error } = await supabase.from("base_uniswapv3_opps").upsert({
+        pool_address: pool.id,
+        data: pool,
+      });
+
+      if (error) {
+        console.error(`Error inserting/updating pool ${pool.id}:`, error.message);
+      } else {
+        console.log(`Successfully inserted/updated pool ${pool.id}`);
+      }
+    }
+  } catch (error) {
+    console.error("Error saving pools to Supabase:", error);
+  }
+}
+
 // To-Do: Remove this section once testing is complete
 (async () => {
   try {
@@ -96,6 +121,8 @@ async function calculateAPRs(): Promise<Pool[]> {
     const sortedPools = poolsWithAPRs.sort((a, b) => b.totalAPR - a.totalAPR);
 
     console.log("Pools with APRs (sorted by descending totalAPR):", sortedPools);
+
+    await savePoolsToSupabase(sortedPools);
   } catch (error) {
     console.error("Error calculating APRs:", error);
   }
