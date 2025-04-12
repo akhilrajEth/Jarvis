@@ -59,7 +59,7 @@ async function initializeAgent(userId: string, walletId: string) {
       model: "gpt-4o-mini",
     });
 
-    const account = privateKeyToAccount((process.env.PRIVATE_KEY || "0x1234") as `0x${string}`);
+    // const account = privateKeyToAccount((process.env.PRIVATE_KEY || "0x1234") as `0x${string}`);
 
     const config: PrivyWalletConfig = {
       appId: process.env.PRIVY_APP_ID ?? "",
@@ -202,6 +202,7 @@ async function main() {
     for (const userId of userIds) {
       const walletId = walletIdMap[userId];
 
+      console.log(`User ID: ${userId}, Wallet ID: ${walletId}`);
       const { agent, config } = await initializeAgent(userId, walletId);
 
       console.log(`Running agent for user ID ${userId}`);

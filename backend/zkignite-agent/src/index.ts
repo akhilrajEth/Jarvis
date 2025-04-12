@@ -61,14 +61,18 @@ function validateEnvironment(): void {
  */
 async function initializeAgent(userId: string, walletId: string) {
   try {
-    const llm = new ChatOpenAI({
-      apiKey: process.env.GAIA_API_KEY,
-      configuration: {
-        baseURL: "https://llama70b.gaia.domains/v1",
-      },
-    });
+    // const llm = new ChatOpenAI({
+    //   apiKey: process.env.GAIA_API_KEY,
+    //   configuration: {
+    //     baseURL: "https://llama70b.gaia.domains/v1",
+    //   },
+    // });
 
-    const account = privateKeyToAccount((process.env.PRIVATE_KEY || "0x1234") as `0x${string}`);
+    // const account = privateKeyToAccount((process.env.PRIVATE_KEY || "0x1234") as `0x${string}`);
+
+    const llm = new ChatOpenAI({
+      model: "gpt-4o-mini",
+    });
 
     const config: PrivyWalletConfig = {
       appId: process.env.PRIVY_APP_ID ?? "",
