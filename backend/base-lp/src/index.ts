@@ -1,6 +1,7 @@
 import axios from "axios";
 import { createClient } from "@supabase/supabase-js";
 import { Pool, UniswapV3PoolData, UniswapV3SubgraphResponse } from "./types";
+import { QUERY } from "./constants";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -8,31 +9,7 @@ dotenv.config();
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 async function getUniswapV3Pools(): Promise<UniswapV3PoolData[]> {
-  const API_KEY = "5db37e23ce820eb4087f65bc3d79438c";
-  const SUBGRAPH_URL = `https://gateway.thegraph.com/api/${API_KEY}/subgraphs/id/HMuAwufqZ1YCRmzL2SfHTVkzZovC9VL2UAKhjvRqKiR1`;
-
-  const QUERY = `
-  {
-    pools(orderBy: totalValueLockedUSD, orderDirection: desc) {
-      id
-      feeTier
-      totalValueLockedUSD
-      volumeUSD
-      token1 {
-        symbol
-        id
-      }
-      token0 {
-        symbol
-        id
-      }
-      poolDayData(first: 7, orderBy: date, orderDirection: desc) {
-        feesUSD
-      }
-      feesUSD
-    }
-  }
-`;
+  const SUBGRAPH_URL = `https://gateway.thegraph.com/api/${process.env.SUBGRAPH_API_KEY}/subgraphs/id/HMuAwufqZ1YCRmzL2SfHTVkzZovC9VL2UAKhjvRqKiR1`;
 
   try {
     const response = await axios.post<UniswapV3SubgraphResponse>(SUBGRAPH_URL, {
@@ -46,7 +23,21 @@ async function getUniswapV3Pools(): Promise<UniswapV3PoolData[]> {
       return [];
     }
 
-    return pools;
+    const filteredPools = pools.filter(pool => {
+      return (
+        pool.feeTier !== null &&
+        pool.feesUSD !== null &&
+        pool.id !== null &&
+        pool.token0 !== null &&
+        pool.token1 !== null &&
+        pool.totalValueLockedUSD !== null &&
+        pool.volumeUSD !== null &&
+        pool.poolDayData !== null &&
+        pool.poolDayData.length > 0
+      );
+    });
+
+    return filteredPools;
   } catch (error) {
     console.error("Error fetching Uniswap V3 pools:", error);
     return [];
@@ -112,17 +103,49 @@ async function savePoolsToSupabase(pools: Pool[]): Promise<void> {
   }
 }
 
+async function fetchPoolsFromSupabase(): Promise<Pool[]> {
+  try {
+    const { data, error } = await supabase.from("base_uniswapv3_opps").select(`
+        data->poolAddress,
+        data->totalAPR,
+        data->token0Address,
+        data->token1Address,
+        data->volumeUSD,
+        data->totalValueLockedUSD,
+        data->feeTier,
+        data->feesUSD
+      `);
+
+    if (error) {
+      console.error("Error fetching data from Supabase:", error.message);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      console.log("No pools found in base_uniswapv3_opps table.");
+      return [];
+    }
+
+    console.log(`Fetched ${data.length} pools from Supabase.`);
+    return data;
+  } catch (error) {
+    console.error("Unexpected error fetching pools from Supabase:", error);
+    return [];
+  }
+}
+
 // To-Do: Remove this section once testing is complete
 (async () => {
   try {
-    const poolsWithAPRs = await calculateAPRs();
-
-    // Note: Sorting by decending order
-    const sortedPools = poolsWithAPRs.sort((a, b) => b.totalAPR - a.totalAPR);
-
-    console.log("Pools with APRs (sorted by descending totalAPR):", sortedPools);
-
-    await savePoolsToSupabase(sortedPools);
+    // Note: Uncomment code below to fetch Uniswap V3 pools and calculate APRs
+    // const poolsWithAPRs = await calculateAPRs();
+    // // Note: Sorting by decending order
+    // const sortedPools = poolsWithAPRs.sort((a, b) => b.totalAPR - a.totalAPR);
+    // console.log("Pools with APRs (sorted by descending totalAPR):", sortedPools);
+    // await savePoolsToSupabase(sortedPools);
+    // Note: Uncomment the following line to fetch pools from Supabase
+    // const pools = await fetchPoolsFromSupabase();
+    // console.log("Fetched pools from Supabase:", pools);
   } catch (error) {
     console.error("Error calculating APRs:", error);
   }
