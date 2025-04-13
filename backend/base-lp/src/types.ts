@@ -11,9 +11,9 @@ export interface Pool {
   totalAPR: number;
   feeTier: number;
   feesUSD: number;
-  id: string;
-  token0: TokenDetails;
-  token1: TokenDetails;
+  poolAddress: string;
+  token0Address: string;
+  token1Address: string;
   totalValueLockedUSD: number;
   volumeUSD: number;
 }

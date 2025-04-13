@@ -79,14 +79,14 @@ async function calculateAPRs(): Promise<Pool[]> {
       totalValueLockedUSD > 0 ? ((365 * averageDailyFees) / totalValueLockedUSD) * 100 : 0;
 
     return {
-      id: poolData.id,
+      poolAddress: poolData.id,
+      totalAPR,
+      token0Address: poolData.token0.id,
+      token1Address: poolData.token1.id,
       feeTier,
       feesUSD,
-      token0: poolData.token0,
-      token1: poolData.token1,
       totalValueLockedUSD,
       volumeUSD,
-      totalAPR,
     };
   });
 
@@ -97,14 +97,14 @@ async function savePoolsToSupabase(pools: Pool[]): Promise<void> {
   try {
     for (const pool of pools) {
       const { error } = await supabase.from("base_uniswapv3_opps").upsert({
-        pool_address: pool.id,
+        pool_address: pool.poolAddress,
         data: pool,
       });
 
       if (error) {
-        console.error(`Error inserting/updating pool ${pool.id}:`, error.message);
+        console.error(`Error inserting/updating pool ${pool.poolAddress}:`, error.message);
       } else {
-        console.log(`Successfully inserted/updated pool ${pool.id}`);
+        console.log(`Successfully inserted/updated pool ${pool.poolAddress}`);
       }
     }
   } catch (error) {
