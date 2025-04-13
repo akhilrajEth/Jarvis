@@ -96,53 +96,6 @@ Important notes:
   }
 
   @CreateAction({
-    name: "getTokenIds",
-    description: `
-Retrieves all LP position NFT token IDs owned by a specific address from Uniswap V3.
-
-Parameters:
-- userAddress: The Ethereum address to check for owned liquidity positions (e.g. 0x1234...abcd)
-
-Returns: 
-- Array of token IDs representing the user's liquidity positions in NFT form
-- Will return empty array if no positions found
-`,
-    schema: GetTokenIdsSchema,
-  })
-  async getTokenIds(
-    wallet: EvmWalletProvider,
-    args: z.infer<typeof GetTokenIdsSchema>,
-  ): Promise<string> {
-    console.log("Currently getting active syncswap positions", args);
-    try {
-      const provider = new ethers.JsonRpcProvider("https://mainnet.base.org/");
-      const nfpm = new ethers.Contract(NFPM_ADDRESS, NFPM_ABI, provider);
-
-      // Query the Transfer events to find events where the user is recipient
-      const filter = nfpm.filters.Transfer(null, args.userAddress);
-      const events = await nfpm.queryFilter(filter);
-
-      const tokenIds = events
-        .filter((e): e is ethers.EventLog => e instanceof ethers.EventLog)
-        .map(event => event.args.tokenId.toString());
-
-      console.log("Successfully retrieved token IDs", tokenIds);
-
-      return JSON.stringify(
-        {
-          success: true,
-          tokenIds,
-          contractAddress: NFPM_ADDRESS,
-        },
-        null,
-        2,
-      );
-    } catch (error) {
-      return this.formatError(error);
-    }
-  }
-
-  @CreateAction({
     name: "createPosition",
     description: `
 This tool allows creating a UniswapV3 LP position. 
@@ -208,7 +161,7 @@ Important notes:
       const receipt = await wallet.waitForTransactionReceipt(txHash);
       const tokenId = this.parseTokenIdFromReceipt(receipt);
 
-      await addActivePositionInDynamo(
+      await addPositionInDatabases(
         args.userId,
         args.poolAddress,
         token0,
@@ -217,10 +170,54 @@ Important notes:
         args.amount1Desired,
         tokenId,
       );
-
-      await addActivePositionInSupabase(args.userId, tokenId, args.poolAddress);
-
       return this.formatSuccess(txHash, receipt);
+    } catch (error) {
+      return this.formatError(error);
+    }
+  }
+
+  @CreateAction({
+    name: "getTokenIds",
+    description: `
+Retrieves all LP position NFT token IDs owned by a specific address from Uniswap V3.
+
+Parameters:
+- userAddress: The Ethereum address to check for owned liquidity positions (e.g. 0x1234...abcd)
+
+Returns: 
+- Array of token IDs representing the user's liquidity positions in NFT form
+- Will return empty array if no positions found
+`,
+    schema: GetTokenIdsSchema,
+  })
+  async getTokenIds(
+    wallet: EvmWalletProvider,
+    args: z.infer<typeof GetTokenIdsSchema>,
+  ): Promise<string> {
+    console.log("Currently getting active syncswap positions", args);
+    try {
+      const provider = new ethers.JsonRpcProvider("https://mainnet.base.org/");
+      const nfpm = new ethers.Contract(NFPM_ADDRESS, NFPM_ABI, provider);
+
+      // Query the Transfer events to find events where the user is recipient
+      const filter = nfpm.filters.Transfer(null, args.userAddress);
+      const events = await nfpm.queryFilter(filter);
+
+      const tokenIds = events
+        .filter((e): e is ethers.EventLog => e instanceof ethers.EventLog)
+        .map(event => event.args.tokenId.toString());
+
+      console.log("Successfully retrieved token IDs", tokenIds);
+
+      return JSON.stringify(
+        {
+          success: true,
+          tokenIds,
+          contractAddress: NFPM_ADDRESS,
+        },
+        null,
+        2,
+      );
     } catch (error) {
       return this.formatError(error);
     }
@@ -318,6 +315,28 @@ Important notes:
     }
 
     throw new Error("No NFT tokenId found in transaction logs");
+  }
+
+  private async addPositionInDatabases(
+    userId: string,
+    poolAddress: string,
+    token0: string,
+    token1: string,
+    amount0Desired: string,
+    amount1Desired: string,
+    tokenId: string,
+  ): Promise<void> {
+    await addActivePositionInDynamo(
+      userId,
+      poolAddress,
+      token0,
+      token1,
+      amount0Desired,
+      amount1Desired,
+      tokenId,
+    );
+
+    await addActivePositionInSupabase(userId, tokenId, poolAddress);
   }
 
   // General helper functions
