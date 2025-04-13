@@ -1,9 +1,10 @@
-export interface OpportunityRecord {
-  opportunity_id: string;
-  protocol: "PancakeSwap" | "SyncSwap";
-  totalAPR: string;
+export interface Pool {
+  totalAPR: number;
+  feeTier: number;
+  feesUSD: number;
   poolAddress: string;
   token0Address: string;
   token1Address: string;
-  active_positions: string;
+  totalValueLockedUSD: number;
+  volumeUSD: number;
 }

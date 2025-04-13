@@ -1,4 +1,4 @@
-export const NFPM_ADDRESS = "0x7581a80c84d7488be276e6c7b4c1206f25946502";
+export const NFPM_ADDRESS = "0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1";
 
 export const POOL_ABI = [
   {
