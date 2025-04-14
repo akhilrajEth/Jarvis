@@ -7,8 +7,14 @@ import {
   wethActionProvider,
   PrivyWalletProvider,
   PrivyWalletConfig,
+  ViemWalletProvider,
 } from "@coinbase/agentkit";
+
 import { privateKeyToAccount } from "viem/accounts";
+import { base } from "viem/chains";
+import { http } from "viem";
+import { createWalletClient } from "viem";
+
 import { swapActionProvider } from "./action-providers/swap/swapActionProvider";
 import { opportunitiesActionProvider } from "./action-providers/opportunityDatabase/opportunityDatabaseActionProvider";
 import { weiToEthConverterActionProvider } from "./action-providers/weiToEthConverter/weiToEthConverterActionProvider";
@@ -58,16 +64,27 @@ async function initializeAgent(userId: string, walletId: string) {
       model: "gpt-4o-mini",
     });
 
-    // const account = privateKeyToAccount((process.env.PRIVATE_KEY || "0x1234") as `0x${string}`);
+    // OLD WALLET METHOD: UNCOMMENTED FOR TESTING UNTIL PRIVY WALLET IS FIXED
 
-    const config: PrivyWalletConfig = {
-      appId: process.env.PRIVY_APP_ID ?? "",
-      appSecret: process.env.PRIVY_APP_SECRET ?? "",
-      chainId: "8453",
-      walletId: walletId,
-    };
+    const account = privateKeyToAccount((process.env.PRIVATE_KEY || "0x1234") as `0x${string}`);
 
-    const walletProvider = await PrivyWalletProvider.configureWithWallet(config);
+    const client = createWalletClient({
+      account,
+      chain: base,
+      transport: http(),
+    });
+
+    const walletProvider = new ViemWalletProvider(client);
+
+    // NEW METHOD: COMMENTED BC OF BUG
+    // const config: PrivyWalletConfig = {
+    //   appId: process.env.PRIVY_APP_ID ?? "",
+    //   appSecret: process.env.PRIVY_APP_SECRET ?? "",
+    //   chainId: "8453",
+    //   walletId: walletId,
+    // };
+
+    // const walletProvider = await PrivyWalletProvider.configureWithWallet(config);
 
     const agentkit = await AgentKit.from({
       walletProvider,
