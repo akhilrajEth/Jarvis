@@ -8,7 +8,7 @@ import { ExecuteSwapSchema } from "./schemas";
 import { approve } from "../utils";
 import { URLSearchParams } from "url";
 
-import { API_URL, NATIVE_TOKEN } from "./constants";
+import { API_URL } from "./constants";
 
 /**
  * SwapActionProvider handles token swaps via KyberSwap Aggregator
@@ -36,7 +36,7 @@ Important notes:
 - Always use exact token contract addresses
 - Native currency amounts should be specified in base units (e.g., 1 ETH not 1000000000000000000 wei)
 - Slippage is fixed at 0.5% for transaction safety
-- Only supports ZKSync network transactions
+- Only supports Base Mainnet network transactions
 `,
     schema: ExecuteSwapSchema,
   })
@@ -61,9 +61,7 @@ Important notes:
       const { routeSummary, routerAddress } = routeResponse.data.data;
 
       // Handle token approval if not native currency
-      if (args.tokenIn !== NATIVE_TOKEN) {
-        await approve(wallet, args.tokenIn, routerAddress, parseEther(args.amountIn));
-      }
+      await approve(wallet, args.tokenIn, routerAddress, parseEther(args.amountIn));
 
       // Step 2: Build swap transaction
       const buildResponse = await axios.post(
@@ -83,7 +81,7 @@ Important notes:
       const txHash = await wallet.sendTransaction({
         to: routerAddress,
         data: encodedSwapData,
-        value: args.tokenIn === NATIVE_TOKEN ? parseEther(args.amountIn) : BigInt(0),
+        value: BigInt(0),
       });
 
       const receipt = await wallet.waitForTransactionReceipt(txHash);
@@ -102,7 +100,7 @@ Important notes:
           txHash,
           blockNumber: receipt.blockNumber.toString(),
           gasUsed: receipt.gasUsed.toString(),
-          network: "ZKSync",
+          network: "Base Mainnet",
         },
         null,
         2,
@@ -115,7 +113,7 @@ Important notes:
         txHash,
         blockNumber: receipt.blockNumber.toString(),
         gasUsed: receipt.gasUsed.toString(),
-        network: "ZKSync",
+        network: "Base Mainnet",
       },
       null,
       2,

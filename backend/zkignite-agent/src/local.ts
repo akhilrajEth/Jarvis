@@ -128,15 +128,16 @@ async function initializeAgent(userId: string, walletId: string) {
         "   - Request to view LP position opportunities for UniswapV3 Pools\n" +
         "   - Find the LP pool with the highest APR across all available pools\n" +
         "   - Retrieve the addresses of token0 and token1 from the pool with the highest APR (each pool contains exactly two tokens)\n" +
-        "   - Verify your wallet balances for token0 and token1 using their respective addresses\n" +
+        "   - Verify your wallet balances for both token0 and token1 using their respective addresses\n" +
         "   - Convert balances from wei to ETH units using the weiToEthConverter tool\n" +
-        "   - If you lack sufficient amounts of token0 or token1, use the swap tool to acquire them:\n" +
-        "     - Call the swap tool once to swap for token0\n" +
-        "     - Call the swap tool again to swap for token1\n" +
-        "   - Execute LP position creation on the appropriate DEX using optimal token amounts based on amount0Desired and amount1Desired in ETH units (ensure you do not use your entire wallet balance)\n" +
+        "   - If you lack sufficient amounts of 0x4200000000000000000000000000000000000006 (Wrapped Ethereum), use the wrap tool to wrap the native balance of Ethereum (leaving enough of the native balance to pay for gas)\n" +
+        "   - If you lack sufficient amounts of token0 and/or token1, use the swap tool to acquire them:\n" +
+        "     - Call the swap tool once to swap 0x4200000000000000000000000000000000000006 (Wrapped Ethereum) for token0\n" +
+        "     - Call the swap tool again to swap 0x4200000000000000000000000000000000000006 (Wrapped Ethereum) for token1\n" +
+        "   - Execute LP position creation on the appropriate DEX using optimal token amounts in ETH units (ensure you do not use your entire wallet balance)\n" +
         "3. If the user does have an active position, check if the poolAddress of that position matches the pool with the highest APR:\n" +
         "   - If it matches, do nothing.\n" +
-        "   - If it does not match, call either the Uniswap tool to invoke the removeLiquidity function.\n" +
+        "   - If it does not match, call the Uniswap tool to invoke the removeLiquidity function.\n" +
         "   - Then follow all steps from part two to create a new position for the pool with the highest APR.\n" +
         `Whenever you need to call a function that requires a userId to read or write to or from the database, use the userId variable, which is ${userId}.\n` +
         "After creating an LP position, remain idle unless a new LP opportunity arises with a higher APR than your current pool.",
@@ -168,15 +169,16 @@ async function runAutonomousMode(agent: any, config: any, userId: string, maxRun
         "   - Request to view LP position opportunities for UniswapV3 Pools\n" +
         "   - Find the LP pool with the highest APR across all available pools\n" +
         "   - Retrieve the addresses of token0 and token1 from the pool with the highest APR (each pool contains exactly two tokens)\n" +
-        "   - Verify your wallet balances for token0 and token1 using their respective addresses\n" +
+        "   - Verify your wallet balances for both token0 and token1 using their respective addresses\n" +
         "   - Convert balances from wei to ETH units using the weiToEthConverter tool\n" +
-        "   - If you lack sufficient amounts of token0 or token1, use the swap tool to acquire them:\n" +
-        "     - Call the swap tool once to swap for token0\n" +
-        "     - Call the swap tool again to swap for token1\n" +
-        "   - Execute LP position creation on the appropriate DEX using optimal token amounts based on amount0Desired and amount1Desired in ETH units (ensure you do not use your entire wallet balance)\n" +
+        "   - If you lack sufficient amounts of 0x4200000000000000000000000000000000000006 (Wrapped Ethereum), use the wrap tool to wrap the native balance of Ethereum (leaving enough of the native balance to pay for gas)\n" +
+        "   - If you lack sufficient amounts of token0 and/or token1, use the swap tool to acquire them:\n" +
+        "     - Call the swap tool once to swap 0x4200000000000000000000000000000000000006 (Wrapped Ethereum) for token0\n" +
+        "     - Call the swap tool again to swap 0x4200000000000000000000000000000000000006 (Wrapped Ethereum) for token1\n" +
+        "   - Execute LP position creation on the appropriate DEX using optimal token amounts in ETH units (ensure you do not use your entire wallet balance)\n" +
         "3. If the user does have an active position, check if the poolAddress of that position matches the pool with the highest APR:\n" +
         "   - If it matches, do nothing.\n" +
-        "   - If it does not match, call either the Uniswap tool to invoke the removeLiquidity function.\n" +
+        "   - If it does not match, call the Uniswap tool to invoke the removeLiquidity function.\n" +
         "   - Then follow all steps from part two to create a new position for the pool with the highest APR.\n" +
         `Whenever you need to call a function that requires a userId to read or write to or from the database, use the userId variable, which is ${userId}.\n` +
         "After creating an LP position, remain idle unless a new LP opportunity arises with a higher APR than your current pool.";
