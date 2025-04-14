@@ -58,8 +58,8 @@ Retrieves current liquidity pool opportunities from Supabase database
       data: pools.map(pool => ({
         poolAddress: pool.poolAddress,
         totalAPR: pool.totalAPR,
-        token0: record.token0Address,
-        token1: record.token1Address,
+        token0: pool.token0Address,
+        token1: pool.token1Address,
         volumeUSD: pool.volumeUSD,
         totalValueLockedUSD: pool.totalValueLockedUSD,
       })),

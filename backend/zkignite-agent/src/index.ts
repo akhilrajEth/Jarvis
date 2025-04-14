@@ -76,7 +76,7 @@ async function initializeAgent(userId: string, walletId: string) {
     const config: PrivyWalletConfig = {
       appId: process.env.PRIVY_APP_ID ?? "",
       appSecret: process.env.PRIVY_APP_SECRET ?? "",
-      chainId: "324", // Note: Defaults to 84532 (base-sepolia)
+      chainId: "8453", // Note: Defaults to 84532 (base-sepolia)
       walletId: walletId,
     };
 

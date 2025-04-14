@@ -3,17 +3,16 @@ import {
   walletActionProvider,
   cdpApiActionProvider,
   cdpWalletActionProvider,
+  erc20ActionProvider,
+  wethActionProvider,
   PrivyWalletProvider,
   PrivyWalletConfig,
 } from "@coinbase/agentkit";
 import { privateKeyToAccount } from "viem/accounts";
 import { swapActionProvider } from "./action-providers/swap/swapActionProvider";
-import { erc20ActionProvider } from "./action-providers/erc20/erc20ActionProvider";
-import { wethActionProvider } from "./action-providers/weth/wethActionProvider";
 import { opportunitiesActionProvider } from "./action-providers/opportunityDatabase/opportunityDatabaseActionProvider";
 import { weiToEthConverterActionProvider } from "./action-providers/weiToEthConverter/weiToEthConverterActionProvider";
-import { pancakeSwapActionProvider } from "./action-providers/pancakeswap/pancakeSwapActionProvider";
-import { syncSwapActionProvider } from "./action-providers/syncswap/syncSwapActionProvider";
+import { uniswapActionProvider } from "./action-providers/uniswap/uniswapActionProvider";
 import { userPositionsActionProvider } from "./action-providers/userPositions/userPositionsActionProvider";
 import { getLangChainTools } from "@coinbase/agentkit-langchain";
 import { HumanMessage } from "@langchain/core/messages";
@@ -64,7 +63,7 @@ async function initializeAgent(userId: string, walletId: string) {
     const config: PrivyWalletConfig = {
       appId: process.env.PRIVY_APP_ID ?? "",
       appSecret: process.env.PRIVY_APP_SECRET ?? "",
-      chainId: "324",
+      chainId: "8453",
       walletId: walletId,
     };
 
@@ -79,8 +78,7 @@ async function initializeAgent(userId: string, walletId: string) {
         wethActionProvider(),
         walletActionProvider(),
         weiToEthConverterActionProvider(),
-        pancakeSwapActionProvider(),
-        syncSwapActionProvider(),
+        uniswapActionProvider(),
         userPositionsActionProvider(),
         cdpApiActionProvider({
           apiKeyName: process.env.CDP_API_KEY_NAME,
@@ -106,12 +104,12 @@ async function initializeAgent(userId: string, walletId: string) {
       checkpointSaver: memory,
       messageModifier:
         "You are a helpful autonomous agent that can interact onchain using the Coinbase Developer Platform AgentKit. " +
-        "You are empowered to interact onchain using your tools. Your wallet is on ZKSync (chainId: 324) " +
+        "You are empowered to interact onchain using your tools. Your wallet is on Base Mainnet" +
         "and you will have some initial wallet balance. " +
         `1. Check if the user has any active positions using the userPositionsActionProvider. The userId ${userId} should be passed as a parameter.\n` +
         "2. If the user does not have any active positions, proceed with the steps to create a new position:\n" +
-        "   - Request to view LP position opportunities for Pancakeswap and Syncswap\n" +
-        "   - Find the LP pool with the highest APR across all available pools from Pancakeswap and Syncswap\n" +
+        "   - Request to view LP position opportunities for UniswapV3 Pools\n" +
+        "   - Find the LP pool with the highest APR across all available pools\n" +
         "   - Retrieve the addresses of token0 and token1 from the pool with the highest APR (each pool contains exactly two tokens)\n" +
         "   - Verify your wallet balances for token0 and token1 using their respective addresses\n" +
         "   - Convert balances from wei to ETH units using the weiToEthConverter tool\n" +
@@ -121,7 +119,7 @@ async function initializeAgent(userId: string, walletId: string) {
         "   - Execute LP position creation on the appropriate DEX using optimal token amounts based on amount0Desired and amount1Desired in ETH units (ensure you do not use your entire wallet balance)\n" +
         "3. If the user does have an active position, check if the poolAddress of that position matches the pool with the highest APR:\n" +
         "   - If it matches, do nothing.\n" +
-        "   - If it does not match, call either the Syncswap or Pancakeswap tool to invoke the removeLiquidity function.\n" +
+        "   - If it does not match, call either the Uniswap tool to invoke the removeLiquidity function.\n" +
         "   - Then follow all steps from part two to create a new position for the pool with the highest APR.\n" +
         `Whenever you need to call a function that requires a userId to read or write to or from the database, use the userId variable, which is ${userId}.\n` +
         "After creating an LP position, remain idle unless a new LP opportunity arises with a higher APR than your current pool.",
@@ -146,12 +144,12 @@ async function runAutonomousMode(agent: any, config: any, userId: string, maxRun
     try {
       const thought =
         "You are a helpful autonomous agent that can interact onchain using the Coinbase Developer Platform AgentKit. " +
-        "You are empowered to interact onchain using your tools. Your wallet is on ZKSync (chainId: 324) " +
+        "You are empowered to interact onchain using your tools. Your wallet is on Base Mainnet" +
         "and you will have some initial wallet balance. " +
         `1. Check if the user has any active positions using the userPositionsActionProvider. The userId ${userId} should be passed as a parameter.\n` +
         "2. If the user does not have any active positions, proceed with the steps to create a new position:\n" +
-        "   - Request to view LP position opportunities for Pancakeswap and Syncswap\n" +
-        "   - Find the LP pool with the highest APR across all available pools from Pancakeswap and Syncswap\n" +
+        "   - Request to view LP position opportunities for UniswapV3 Pools\n" +
+        "   - Find the LP pool with the highest APR across all available pools\n" +
         "   - Retrieve the addresses of token0 and token1 from the pool with the highest APR (each pool contains exactly two tokens)\n" +
         "   - Verify your wallet balances for token0 and token1 using their respective addresses\n" +
         "   - Convert balances from wei to ETH units using the weiToEthConverter tool\n" +
@@ -161,7 +159,7 @@ async function runAutonomousMode(agent: any, config: any, userId: string, maxRun
         "   - Execute LP position creation on the appropriate DEX using optimal token amounts based on amount0Desired and amount1Desired in ETH units (ensure you do not use your entire wallet balance)\n" +
         "3. If the user does have an active position, check if the poolAddress of that position matches the pool with the highest APR:\n" +
         "   - If it matches, do nothing.\n" +
-        "   - If it does not match, call either the Syncswap or Pancakeswap tool to invoke the removeLiquidity function.\n" +
+        "   - If it does not match, call either the Uniswap tool to invoke the removeLiquidity function.\n" +
         "   - Then follow all steps from part two to create a new position for the pool with the highest APR.\n" +
         `Whenever you need to call a function that requires a userId to read or write to or from the database, use the userId variable, which is ${userId}.\n` +
         "After creating an LP position, remain idle unless a new LP opportunity arises with a higher APR than your current pool.";
