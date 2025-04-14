@@ -1,1 +1,1 @@
-export const API_URL = "https://aggregator-api.kyberswap.com/zksync/api/v1";
+export const API_URL = "https://aggregator-api.kyberswap.com/base/api/v1";
