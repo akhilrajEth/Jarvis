@@ -6,7 +6,10 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(
+  process.env.SUPABASE_URL ?? "",
+  process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+);
 
 async function getUniswapV3Pools(): Promise<UniswapV3PoolData[]> {
   const SUBGRAPH_URL = `https://gateway.thegraph.com/api/${process.env.SUBGRAPH_API_KEY}/subgraphs/id/HMuAwufqZ1YCRmzL2SfHTVkzZovC9VL2UAKhjvRqKiR1`;
@@ -16,14 +19,18 @@ async function getUniswapV3Pools(): Promise<UniswapV3PoolData[]> {
       query: QUERY,
     });
 
+    console.log("Response from subgraph:", response.data);
     const pools = response.data.data.pools;
 
+    console.log("Number of pools fetched from subgraph:", pools.length);
+    console.log("First pool data:", pools[0]);
+    console.log("Last pool data:", pools[pools.length - 1]);
     if (!pools || pools.length === 0) {
       console.error("No pools found");
       return [];
     }
 
-    const filteredPools = pools.filter(pool => {
+    const filteredPools = pools.filter((pool: UniswapV3PoolData) => {
       return (
         pool.feeTier !== null &&
         pool.feesUSD !== null &&
@@ -33,7 +40,9 @@ async function getUniswapV3Pools(): Promise<UniswapV3PoolData[]> {
         pool.totalValueLockedUSD !== null &&
         pool.volumeUSD !== null &&
         pool.poolDayData !== null &&
-        pool.poolDayData.length > 0
+        pool.poolDayData.length > 0 &&
+        parseFloat(pool.totalValueLockedUSD) >= 2500000 &&
+        parseFloat(pool.volumeUSD) >= 1000000
       );
     });
 
@@ -127,7 +136,7 @@ async function fetchPoolsFromSupabase(): Promise<Pool[]> {
     }
 
     console.log(`Fetched ${data.length} pools from Supabase.`);
-    return data;
+    return data as Pool[];
   } catch (error) {
     console.error("Unexpected error fetching pools from Supabase:", error);
     return [];
@@ -138,10 +147,10 @@ async function fetchPoolsFromSupabase(): Promise<Pool[]> {
 (async () => {
   try {
     // Note: Uncomment code below to fetch Uniswap V3 pools and calculate APRs
-    // const poolsWithAPRs = await calculateAPRs();
+    const poolsWithAPRs = await calculateAPRs();
     // // Note: Sorting by decending order
-    // const sortedPools = poolsWithAPRs.sort((a, b) => b.totalAPR - a.totalAPR);
-    // console.log("Pools with APRs (sorted by descending totalAPR):", sortedPools);
+    const sortedPools = poolsWithAPRs.sort((a, b) => b.totalAPR - a.totalAPR);
+    console.log("Pools with APRs (sorted by descending totalAPR):", sortedPools);
     // await savePoolsToSupabase(sortedPools);
     // Note: Uncomment the following line to fetch pools from Supabase
     // const pools = await fetchPoolsFromSupabase();

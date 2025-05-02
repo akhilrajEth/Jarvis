@@ -1,5 +1,5 @@
 interface PoolDayDataItem {
-  feesUSD: number;
+  feesUSD: string;
 }
 
 interface TokenDetails {
